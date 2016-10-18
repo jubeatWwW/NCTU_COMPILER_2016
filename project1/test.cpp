@@ -13,9 +13,12 @@ void main(){
     if(a != 1 || b >= 2){
         b = b*1.23e-1;
     }
+    void fucku();
+    char fuck = "a";
     /*
         RRRRR
-        /* /*  */ a = 1 * 87;
+        /* /*  */ a = 1 * 87;float fucku = 0.230;
+    fuck = fucku+1;
     /* a a a*/
     /*
      *

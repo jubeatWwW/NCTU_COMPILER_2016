@@ -5,12 +5,17 @@
 #define tokenChar(t)        { LIST; if (Opt_Token) printf("<\"%s\">\n", t); }
 #define MAX_LINE_LENGTH 257
 #define MAX_ID_LENGTH 257
+#define true 1
+#define false 0
+typedef int bool;
 int Opt_Source = 1;
 int Opt_Token = 1;
 int Opt_Statistic = 1;
 int linenum = 1;
-int isComment = 0;
 char buf[MAX_LINE_LENGTH];
+char dict[256][256];
+int cnt[256];
+int dict_num = 0;
 %}
 
 %Start COMMENT
@@ -87,6 +92,34 @@ char buf[MAX_LINE_LENGTH];
     if(yyleng>=MAX_ID_LENGTH){
         REJECT;
     }
+    bool flag = true;
+    for(int i=0; i<dict_num; i++){
+        int cursor = 0;
+        bool same = true;
+        while(cursor < yyleng){
+            if(dict[i][cursor]!=yytext[cursor] || dict[i][yyleng] != '\0'){
+                same = false;    
+                break;    
+            }
+            cursor++;
+        }
+        if(same){
+            flag = false;
+            cnt[i]++;
+            break;           
+        }
+    }
+    if(flag){
+        int i = 0;
+        while(i<yyleng){
+            dict[dict_num][i] = yytext[i];
+            i++;
+        }
+        dict[dict_num][i] = '\0';
+        cnt[dict_num] = 1;
+        dict_num++;
+    }
+
     tokenString("id", yytext);
 }
 
@@ -132,6 +165,10 @@ int main( int argc, char **argv )
     if (Opt_Statistic)
     {
         // Print frequency table
+        printf("\nfrequency of identifiers:\n");
+        for(int i=0; i<dict_num; i++){
+            printf("%s\t%d\n", dict[i], cnt[i]);
+        }
     }
 
     exit(0);
