@@ -63,14 +63,30 @@ char buf[MAX_LINE_LENGTH];
 }
 
 <INITIAL>\"(\\.|[^\\"])*\" {
-    tokenString("string", yytext);
+    int len = yyleng;
+    char newStr[len];
+    int oldIndex = 1, newIndex = 0;
+    while(oldIndex < len){
+        if(yytext[oldIndex]=='\\' && yytext[oldIndex+1]=='\"'){
+            oldIndex++;
+        }else if(yytext[oldIndex]=='\\' && yytext[oldIndex+1]=='\\'){
+            oldIndex++;
+        }
+
+        newStr[newIndex++] = yytext[oldIndex++];
+    }
+    newStr[newIndex-1] = '\0';
+    tokenString("string", newStr);
 }
 
 <INITIAL>while|do|if|else|true|false|for|int|print|const|read|boolean|bool|void|float|double|string|continue|break|return {
     tokenString("KW", yytext);
 }
 
-<INITIAL>[a-zA-Z0-9]+ {
+<INITIAL>[a-zA-Z][a-zA-Z0-9]* {
+    if(yyleng>=MAX_ID_LENGTH){
+        REJECT;
+    }
     tokenString("id", yytext);
 }
 
