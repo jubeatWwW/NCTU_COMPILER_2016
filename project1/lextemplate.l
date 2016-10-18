@@ -16,12 +16,24 @@ char buf[MAX_LINE_LENGTH];
     tokenString("delim", "("); 
 }
 
+")" {
+    tokenString("delim", ")");
+}
+
+\/\/.* {
+    LIST;
+}
+
 \n {
     LIST;
     if (Opt_Source)
         printf("%d:%s\n", linenum, buf);
     ++linenum;
     buf[0] = '\0';
+}
+
+\40 {
+    LIST;
 }
 
 . { // Unrecognized character
