@@ -1,6 +1,6 @@
 %{
 #define LIST                { strncat(buf, yytext, sizeof(buf) - strlen(buf) - 1); }
-#define token(t)            { LIST; if (Opt_Token) printf("<%s>\n", #t); }
+#define token(t)            { LIST; if (Opt_Token) printf("<\"%s\">\n", t); }
 #define tokenString(t, s)   { LIST; if (Opt_Token) printf("<%s:%s>\n", t, s); }
 #define MAX_LINE_LENGTH 257
 #define MAX_ID_LENGTH 257
@@ -8,21 +8,68 @@ int Opt_Source = 1;
 int Opt_Token = 1;
 int Opt_Statistic = 1;
 int linenum = 1;
+int isComment = 0;
 char buf[MAX_LINE_LENGTH];
 %}
 
+%Start COMMENT
+
+
 %%
-"(" {
-    tokenString("delim", "("); 
-}
-
-")" {
-    tokenString("delim", ")");
-}
-
-\/\/.* {
+<INITIAL>\/\*.*\*\/ {
     LIST;
 }
+
+<COMMENT>.*\*\/ {
+    LIST;
+    BEGIN INITIAL;
+}
+
+<INITIAL>\/\*.* {
+    LIST;
+    BEGIN COMMENT;
+}
+
+<COMMENT>. {
+    LIST;
+}
+
+<INITIAL>\/\/.* {
+    LIST;
+}
+
+<INITIAL>[(){};] {
+    tokenString("delim", yytext); 
+}
+
+<INITIAL>[<>=\+\-\*\/] {
+    token(yytext);
+}
+
+<INITIAL>[0-9]*\.[0-9]+([Ee][+-])[0-9]+ {
+    tokenString("scientific", yytext);
+}
+
+<INITIAL>[0-9]*\.[0-9]+ {
+    tokenString("float", yytext);
+}
+
+<INITIAL>[-+]*[0-9]+ {
+    tokenString("integer", yytext);
+}
+
+<INITIAL>\".*\" {
+    tokenString("string", yytext);
+}
+
+<INITIAL>void|int|double|if|for|char|float|print {
+    tokenString("KW", yytext);
+}
+
+<INITIAL>[a-zA-Z0-9]+ {
+    tokenString("id", yytext);
+}
+
 
 \n {
     LIST;
@@ -30,6 +77,9 @@ char buf[MAX_LINE_LENGTH];
         printf("%d:%s\n", linenum, buf);
     ++linenum;
     buf[0] = '\0';
+}
+
+^\40+ {
 }
 
 \40 {
