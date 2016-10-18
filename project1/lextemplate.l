@@ -55,7 +55,7 @@ int dict_num = 0;
     tokenChar(yytext);
 }
 
-<INITIAL>[0-9]*\.[0-9]+([Ee][+-])[0-9]+ {
+<INITIAL>[0-9]*\.[0-9]+[Ee][+-]?[0-9]+ {
     tokenString("scientific", yytext);
 }
 
@@ -63,7 +63,7 @@ int dict_num = 0;
     tokenString("float", yytext);
 }
 
-<INITIAL>0|[1-9]*[0-9]+ {
+<INITIAL>0|([1-9][0-9]*) {
     tokenString("integer", yytext);
 }
 

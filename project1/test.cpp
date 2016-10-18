@@ -11,7 +11,8 @@ void main(){
         b = b*1.23e-1;
     }
     if(a != 1 || b >= 2){
-        b = b*1.23e-1;
+        b = b*1.23e1;
+        b = b*1.23e+1;
     }
     void fucku();
     char fuck = "a";
@@ -25,4 +26,5 @@ void main(){
      * test
      *
      * */ b = 1 + 2 + 3;
+    a = 00023
 }
