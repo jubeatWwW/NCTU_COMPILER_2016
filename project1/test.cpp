@@ -28,7 +28,7 @@ void main(){
      * */ b = 1 + 2 + 3;
     a = 00023
 #pragma source on
-#pragma token off
+#pragma token on
 #pragma source off     /*a a a 8**/
 a = a + 1;
 /*1
