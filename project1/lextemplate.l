@@ -18,7 +18,7 @@ int cnt[256];
 int dict_num = 0;
 %}
 
-%Start COMMENT
+%Start COMMENT PRAGMA
 
 
 %%
@@ -88,36 +88,87 @@ int dict_num = 0;
     tokenString("KW", yytext);
 }
 
+<INITIAL>^#pragma\40(source)\40(on|off) {
+    LIST;
+    if(yytext[strlen(yytext) - 1] == 'n')
+        Opt_Source = 1;
+    else
+        Opt_Source = 0;
+    BEGIN PRAGMA;
+}
+
+<INITIAL>^#pragma\40(token)\40(on|off) {
+    LIST;
+    if(yytext[strlen(yytext) - 1] == 'n')
+        Opt_Token = 1;
+    else
+        Opt_Token = 0;
+    BEGIN PRAGMA;
+}
+
+<INITIAL>^#pragma\40(statistic)\40(on|off) {
+    LIST;
+    if(yytext[strlen(yytext) - 1] == 'n')
+        Opt_Statistic = 1;
+    else
+        Opt_Statistic = 0;
+    BEGIN PRAGMA;
+}
+
+<PRAGMA>\/\/.* {
+    LIST;
+}
+
+<PRAGMA>\/\*.*\*\/ {
+    LIST;
+}
+
+<PRAGMA>\/\*.* {
+    LIST;
+    BEGIN COMMENT;
+}
+
+<PRAGMA>\n {
+    LIST;
+    if (Opt_Source)
+        printf("%d:%s\n", linenum, buf);
+    ++linenum;
+    buf[0] = '\0';
+    BEGIN INITIAL;
+}
+
 <INITIAL>[a-zA-Z][a-zA-Z0-9]* {
     if(yyleng>=MAX_ID_LENGTH){
         REJECT;
     }
-    bool flag = true;
-    for(int i=0; i<dict_num; i++){
-        int cursor = 0;
-        bool same = true;
-        while(cursor < yyleng){
-            if(dict[i][cursor]!=yytext[cursor] || dict[i][yyleng] != '\0'){
-                same = false;    
-                break;    
+    if(Opt_Statistic){
+        bool flag = true;
+        for(int i=0; i<dict_num; i++){
+            int cursor = 0;
+            bool same = true;
+            while(cursor < yyleng){
+                if(dict[i][cursor]!=yytext[cursor] || dict[i][yyleng] != '\0'){
+                    same = false;    
+                    break;    
+                }
+                cursor++;
             }
-            cursor++;
+            if(same){
+                flag = false;
+                cnt[i]++;
+                break;           
+            }
         }
-        if(same){
-            flag = false;
-            cnt[i]++;
-            break;           
+        if(flag){
+            int i = 0;
+            while(i<yyleng){
+                dict[dict_num][i] = yytext[i];
+                i++;
+            }
+            dict[dict_num][i] = '\0';
+            cnt[dict_num] = 1;
+            dict_num++;
         }
-    }
-    if(flag){
-        int i = 0;
-        while(i<yyleng){
-            dict[dict_num][i] = yytext[i];
-            i++;
-        }
-        dict[dict_num][i] = '\0';
-        cnt[dict_num] = 1;
-        dict_num++;
     }
 
     tokenString("id", yytext);

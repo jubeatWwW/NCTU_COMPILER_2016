@@ -27,4 +27,21 @@ void main(){
      *
      * */ b = 1 + 2 + 3;
     a = 00023
+#pragma source on
+#pragma token off
+#pragma source off     /*a a a 8**/
+a = a + 1;
+/*1
+ * 1
+ */
+#pragma source on
+#pragma statistic off /*
+*
+* *
+* *
+*   aa*/ pragmaTest = 1;
+                    
+#pragma token on //comment;
+#pragma statistic on//;
+    pragmaTest = pragmaTest + 1;
 }
