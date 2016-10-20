@@ -59,7 +59,7 @@ int dict_num = 0;
     tokenString("scientific", yytext);
 }
 
-<INITIAL>(0|[1-9]+)\.[0-9]+ {
+<INITIAL>(0|([1-9][0-9]*))\.[0-9]+ {
     tokenString("float", yytext);
 }
 

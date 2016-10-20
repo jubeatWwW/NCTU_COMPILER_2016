@@ -44,4 +44,10 @@ a = a + 1;
 #pragma token on //comment;
 #pragma statistic on//;
     pragmaTest = pragmaTest + 1;
+0.0023
+00.23
+01.23
+1.23
+10.23
+11.234
 }
