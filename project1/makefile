@@ -1,4 +1,6 @@
 OS := $(shell uname)
+all: scanner
+
 scanner: lex.yy.c
 ifeq ($(OS),Darwin)
 	gcc -o scanner lex.yy.c -ll
@@ -7,7 +9,7 @@ else
 endif
 lex.yy.c:lextemplate.l
 	lex lextemplate.l
-run: $(PROGRAM)
-	./scanner lex.cpp
+run: 	
+	./scanner $(PROGRAM)
 clean:
 	rm -f lex.yy.c
