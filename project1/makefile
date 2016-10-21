@@ -3,7 +3,7 @@ scanner: lex.yy.c
 	ifeq ($(OS),Darwin)
 		gcc -o scanner lex.yy.c -ll
 	else
-		gcc -o scanner lex.yy.c -ll
+		gcc -o scanner lex.yy.c -lfl
 	endif
 lex.yy.c:lextemplate.l
 	lex lextemplate.l
