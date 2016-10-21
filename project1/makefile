@@ -1,4 +1,5 @@
 OS := $(shell uname)
+PROGRAM := lex.cpp
 all: scanner
 
 scanner: lex.yy.c
