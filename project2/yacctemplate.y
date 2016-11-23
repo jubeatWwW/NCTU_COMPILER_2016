@@ -26,27 +26,18 @@ extern char buf[256];           /* declared in lex.l */
 
 %%
 
-program : statements
+program : programBodies
 	    ;
 
-/* every statement */
-statements : /* empty */ 
-           | ExistStatements
-           ;
+programBodies : programBodies programBody
+              | programBody
+              ;
 
-ExistStatements : ExistStatements statement
-                | statement
-                ; 
+programBody : function
+            | declartions SEMI
+            ;
 
-statement : function
-          | declartions SEMI
-          | simple SEMI
-          | conditional
-          | while
-          | for
-          | jump
-          ;
-
+/* function */
 type : INT 
      | FLOAT
      | DOUBLE
@@ -54,6 +45,76 @@ type : INT
      | BOOL
      | VOID
      ; 
+
+nonVoidType : INT 
+            | FLOAT
+            | DOUBLE
+            | STRING
+            | BOOL
+            ; 
+
+return : NonVoidreturn
+       ;
+
+NonVoidreturn : RETURN expressions SEMI
+            ;
+
+voidReturn : RETURN SEMI
+           ;
+
+function : nonVoidType ID '(' arguments ')' SEMI
+         | VOID ID '(' arguments ')' SEMI
+         | nonVoidType ID '(' arguments ')' compound
+         | VOID ID '(' arguments ')' voidcompound
+
+/* argument */
+arguments : /* empty */  
+          | ExistArguments
+          ;
+
+argument : type ID
+         | type array
+         ;
+
+ExistArguments : ExistArguments ',' argument
+               | argument
+               ;
+
+compound : '{' statements '}'
+voidcompound : '{' voidstatements '}'
+/* every statement */
+statements : /* empty */
+           | ExistStatement
+           ;
+
+voidstatements : /* empty */
+               | voidExistStatement
+               ;
+
+ExistStatement : ExistStatement statement
+               | statement
+               ;
+
+voidExistStatement : voidExistStatement voidstatement
+                   | voidstatement
+                   ;
+
+statement : declartions SEMI
+          | simple SEMI
+          | conditional
+          | while
+          | for
+          | jump
+          ;
+
+voidstatement : declartions SEMI
+              | simple SEMI
+              | conditional
+              | while
+              | for
+              | voidjump
+              ;
+
 
 number : CONST_INT
        | CONST_FLOAT
@@ -64,16 +125,33 @@ const_bool : TRUE
            | FALSE
            ;
 
-compound : '{' statements '}'
-
 /* declartion */
-declartions : CONST declartion
+declartions : const_declartion
             | declartion 
             ;
 
-declartion : type varNames
-           | type var
+declartion : nonVoidType varNames
+           | nonVoidType var
            ;
+
+const_assign : SUB number
+             | number
+             | CONST_STR
+             ;
+
+const_declartion : CONST nonVoidType const_vars
+                 | CONST nonVoidType const_var
+                 ;
+
+const_vars : const_vars ',' const_var
+           | const_var
+           ;
+
+const_var : ID ASSIGN const_assign
+          | ID
+          | array
+          | array ASSIGN '{' const_arrayInit '}'
+          ;
 
 varNames : varNames ',' var
          | var
@@ -95,6 +173,10 @@ dimensions : dimensions dimension
 
 dimension : '[' CONST_INT ']'
           ;
+
+const_arrayInit : const_arrayInit ',' const_assign
+                | const_assign
+                ;
 
 arrayInit : arrayInit ',' expression
           | expression
@@ -119,6 +201,7 @@ simple : variableRef ASSIGN expressions
        | PRINT CONST_STR
        | PRINT expressions
        | READ variableRef
+       | functionUsage
        ;
 
 /* expression */
@@ -128,6 +211,7 @@ expressions : expression
             ;
 
 expression : number
+           | CONST_STR
            | boolCalc
            | variableRef
            | SUB expression %prec NEG
@@ -151,6 +235,8 @@ boolCalc : const_bool
          | expression OR expression %prec OR
          | NOT expression %prec NOT
          ;
+
+functionUsage : ID '(' functionUsageArg ')'
 
 functionUsageArg : /* empty */  
                  | expression
@@ -182,26 +268,16 @@ for : FOR '(' initialExpr SEMI expressions SEMI simple')' '{' statements '}'
 
 /* jump */
 
-jump : RETURN expressions SEMI
+jump : return 
      | BREAK SEMI
      | CONTINUE SEMI
      ;
 
-/* argument */
-argument : type ID
+voidjump : voidReturn
+         | BREAK SEMI
+         | CONTINUE SEMI
          ;
 
-arguments : /* empty */  
-          | ExistArguments
-          ;
-
-ExistArguments : ExistArguments ',' argument
-                  | argument
-                  ;
-
-/* function */
-function : type ID '(' arguments ')' SEMI
-         | type ID '(' arguments ')' compound
 
 %%
 
