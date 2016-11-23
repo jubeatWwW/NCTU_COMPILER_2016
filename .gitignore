@@ -1,2 +1,7 @@
 lex.yy.c
 scanner
+scanner.c
+sample_test_and_result/
+y.tab.c
+y.tab.h
+y.output
