@@ -54,7 +54,6 @@ nonVoidType : INT
             ; 
 
 return : NonVoidreturn
-       | voidReturn
        ;
 
 NonVoidreturn : RETURN expressions SEMI
@@ -74,6 +73,7 @@ arguments : /* empty */
           ;
 
 argument : type ID
+         | type array
          ;
 
 ExistArguments : ExistArguments ',' argument
@@ -126,13 +126,32 @@ const_bool : TRUE
            ;
 
 /* declartion */
-declartions : CONST declartion
+declartions : const_declartion
             | declartion 
             ;
 
 declartion : nonVoidType varNames
            | nonVoidType var
            ;
+
+const_assign : SUB number
+             | number
+             | CONST_STR
+             ;
+
+const_declartion : CONST nonVoidType const_vars
+                 | CONST nonVoidType const_var
+                 ;
+
+const_vars : const_vars ',' const_var
+           | const_var
+           ;
+
+const_var : ID ASSIGN const_assign
+          | ID
+          | array
+          | array ASSIGN '{' const_arrayInit '}'
+          ;
 
 varNames : varNames ',' var
          | var
@@ -154,6 +173,10 @@ dimensions : dimensions dimension
 
 dimension : '[' CONST_INT ']'
           ;
+
+const_arrayInit : const_arrayInit ',' const_assign
+                | const_assign
+                ;
 
 arrayInit : arrayInit ',' expression
           | expression
@@ -178,6 +201,7 @@ simple : variableRef ASSIGN expressions
        | PRINT CONST_STR
        | PRINT expressions
        | READ variableRef
+       | functionUsage
        ;
 
 /* expression */
@@ -187,6 +211,7 @@ expressions : expression
             ;
 
 expression : number
+           | CONST_STR
            | boolCalc
            | variableRef
            | SUB expression %prec NEG
@@ -210,6 +235,8 @@ boolCalc : const_bool
          | expression OR expression %prec OR
          | NOT expression %prec NOT
          ;
+
+functionUsage : ID '(' functionUsageArg ')'
 
 functionUsageArg : /* empty */  
                  | expression
