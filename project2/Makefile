@@ -8,7 +8,7 @@ SCANNERN = scanner
 SCANNERSN = scanner.c
 TESTFN = whole.cm
 all: scanner
-	$(CC) $(SCANNERSN) y.tab.c -ly -lfl
+	$(CC) $(SCANNERSN) y.tab.c -ly -lfl -o parser
 
 scanner: lex
 	$(CC) -o $(SCANNERN) $(SCANNERSN) $(LIBS)
