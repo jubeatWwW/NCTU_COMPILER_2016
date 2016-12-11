@@ -1,12 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "SymbolTable.h"
 
 extern int yyparse();
 extern FILE* yyin;
+
+extern SymbolTable* table;
+extern List* list;
+
 int  main( int argc, char **argv )
 {
-
-	if( argc == 1 )
+    table = SymbolTableFactory();
+	list = ListFactory();
+    if( argc == 1 )
 	{
 		yyin = stdin;
 	}

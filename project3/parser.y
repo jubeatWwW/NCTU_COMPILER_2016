@@ -1,16 +1,24 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
+#include "SymbolTable.h"
 
 extern int linenum;
 extern FILE	*yyin;
 extern char	*yytext;
+extern int yylex(void);
 extern char buf[256];
 
 %}
 
-%token	ID
+%union {
+    char* str;
+    Type* type;
+    //TableEntry* entry;
+}
+
+%token <str> ID
 %token	INT_CONST
 %token	FLOAT_CONST
 %token	SCIENTIFIC
@@ -62,6 +70,8 @@ extern char buf[256];
 %token	GT_OP
 %token	NOT_OP
 
+%type <type> scalar_type
+
 /*	Program 
 	Function 
 	Array 
@@ -93,10 +103,14 @@ decl_and_def_list : decl_and_def_list var_decl
 				  ;
 
 funct_def : scalar_type ID L_PAREN R_PAREN compound_statement
+          {
+                printf("scalar: %s\n", $1);
+                printf("id: %s\n", $2);
+          }
 		  | scalar_type ID L_PAREN parameter_list R_PAREN  compound_statement
 		  | VOID ID L_PAREN R_PAREN compound_statement
 		  | VOID ID L_PAREN parameter_list R_PAREN compound_statement
-		  ;
+          ;
 
 funct_decl : scalar_type ID L_PAREN R_PAREN SEMICOLON
 	 	   | scalar_type ID L_PAREN parameter_list R_PAREN SEMICOLON
@@ -111,16 +125,21 @@ parameter_list : parameter_list COMMA scalar_type ID
 			   ;
 
 var_decl : scalar_type identifier_list SEMICOLON
+         {
+            PrintList(list);
+            InsertListToTable(table, list, "variable", $1, NULL);
+            PrintSymbolTable(table);
+         }
 		 ;
 
-identifier_list : identifier_list COMMA ID
-		 		| identifier_list COMMA ID ASSIGN_OP logical_expression
+identifier_list : identifier_list COMMA ID {AddIdToList(list, $3);}
+                | identifier_list COMMA ID ASSIGN_OP logical_expression
 				| identifier_list COMMA array_decl ASSIGN_OP initial_array
 				| identifier_list COMMA array_decl
 				| array_decl ASSIGN_OP initial_array
 				| array_decl
 				| ID ASSIGN_OP logical_expression
-				| ID
+				| ID {AddIdToList(list, $1);}
 				;
 
 initial_array : L_BRACE literal_list R_BRACE
@@ -146,7 +165,7 @@ dim : dim ML_BRACE INT_CONST MR_BRACE
 	;
 
 compound_statement : L_BRACE var_const_stmt_list R_BRACE
-				   ;
+                   ;
 
 var_const_stmt_list : var_const_stmt_list statement	
 				    | var_const_stmt_list var_decl
@@ -288,11 +307,11 @@ dimension : dimension ML_BRACE logical_expression MR_BRACE
 
 
 
-scalar_type : INT
-			| DOUBLE
-			| STRING
-			| BOOL
-			| FLOAT
+scalar_type : INT       {$$ = BuildType("int");}
+			| DOUBLE    {$$ = BuildType("double");}
+			| STRING    {$$ = BuildType("string");}
+			| BOOL      {$$ = BuildType("bool");}
+			| FLOAT     {$$ = BuildType("float");}
 			;
  
 literal_const : INT_CONST

@@ -1,5 +1,7 @@
 %{
 
+#include <string.h>
+#include "SymbolTable.h"
 #include "y.tab.h"
 
 #define LIST                strcat(buf, yytext)
@@ -225,19 +227,19 @@ id *new_id();
 
 "for"	{tokenString("KW", yytext);	return FOR;}
 
-"int"	{tokenString("KW", yytext);	return INT;}
+"int"	{tokenString("KW", yytext);	yylval.str=strdup(yytext); return INT;}
 
 "print"	{tokenString("KW", yytext);	return PRINT;}
 
-"bool"	{tokenString("KW", yytext);	return BOOL;}
+"bool"	{tokenString("KW", yytext);	yylval.str=strdup(yytext); return BOOL;}
 
-"void"	{tokenString("KW", yytext);	return VOID;}
+"void"	{tokenString("KW", yytext);	yylval.str=strdup(yytext); return VOID;}
 
-"float"	{tokenString("KW", yytext);	return FLOAT;}
+"float"	{tokenString("KW", yytext);	yylval.str=strdup(yytext); return FLOAT;}
 
-"double"	{tokenString("KW", yytext);	return DOUBLE;}
+"double"	{tokenString("KW", yytext);	yylval.str=strdup(yytext); return DOUBLE;}
 
-"string"	{tokenString("KW", yytext);	return STRING;}
+"string"	{tokenString("KW", yytext);	yylval.str=strdup(yytext); return STRING;}
 
 "continue"	{tokenString("KW", yytext);	return CONTINUE;}
 
@@ -346,7 +348,10 @@ id *new_id();
 		if(Opt_Statistic){
 			set(&id_head,yytext);
 		}
-		tokenString("id",yytext);	return ID;
+        char *tmp = strdup(yytext);
+        yylval.str = tmp;
+		tokenString("id",yytext);	
+        return ID;
 	}
 .	{
 		printf("Error at line %d: %s\n",linenum, yytext);
