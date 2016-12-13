@@ -5,12 +5,12 @@
 extern int yyparse();
 extern FILE* yyin;
 
-extern SymbolTable* table;
+extern SymbolTable* symbolTable;
 extern List* list;
 
 int  main( int argc, char **argv )
 {
-    table = SymbolTableFactory();
+    symbolTable = SymbolTableFactory();
 	list = ListFactory();
     if( argc == 1 )
 	{

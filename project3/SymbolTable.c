@@ -15,19 +15,20 @@ List* ListFactory(){
     list->position = 0;
     list->capacity = 4;
     list->list = (char**)malloc(sizeof(char*)*4);
+    list->types = (Type**)malloc(sizeof(Type*)*4);
     return list;
 }
 
 void InsertEntry(SymbolTable* table, const char* name, const char* kind, int level, Type* type, Attr *attr){
-    TableEntry* entry = (TableEntry*)malloc(sizeof(TableEntry));
+    TableEntry* tmp = (TableEntry*)malloc(sizeof(TableEntry));
     //char* tmpName = strdup(name);
     //char* tmpKind = strdup(kind);
-    strcpy(entry->name, name);
-    strcpy(entry->kind, kind);
-    entry->level = level;
-    entry->type = type;
-    entry->attr = attr;
-
+    strcpy(tmp->name, name);
+    strcpy(tmp->kind, kind);
+    tmp->level = level;
+    tmp->type = type;
+    tmp->attr = attr;
+    
     if(table->capacity <= table->position){
         TableEntry** entryTran = table->entry;
         table->capacity *= 2;
@@ -39,18 +40,19 @@ void InsertEntry(SymbolTable* table, const char* name, const char* kind, int lev
         free(entryTran);
     }
 
-    table->entry[table->position++] = entry;
+    table->entry[table->position++] = tmp;
 }
 
 void PrintSymbolTable(SymbolTable* table){
     /* tmp print for debug*/
     int i;
     TableEntry* tmp;
+    printf("\n");
     for(i=0; i<table->position; i++){
         tmp = table->entry[i];
-        printf("name: %s\tkind: %s\ttype: %s\n", tmp->name, tmp->kind, tmp->type);
+        printf("name: %s\tkind: %s\tlevel: %d\ttype: %s\n", tmp->name, tmp->kind, tmp->level, tmp->type);
     }
-    free(tmp);
+    printf("\n");
 }
 
 
@@ -58,14 +60,24 @@ void InsertListToTable(SymbolTable* table, List* list, const char* kind,Type* ty
     int i;
     for(i=0; i<list->position; i++){
         InsertEntry(table, list->list[i], kind, table->currentLevel, type, attr);
+        if(list->types[i]!=NULL){
+            Array* cur = list->types[i]->arr;
+            while(cur!=NULL){
+                printf("dim: %d\n\n", cur->size);
+                cur = cur->higherDim;
+            }
+        }
     }
 
     for(i=list->position-1; i>=0; i--){
         free(list->list[i]);
+        if(list->types[i]!=NULL)
+            free(list->types[i]);
     }
     list->position = 0;
     list->capacity = 4;
     list->list = (char**)malloc(sizeof(char*) * 4);
+    list->types = (Type**)malloc(sizeof(Type*) * 4);
 }
 
 void AddIdToList(List* list, char* id){
@@ -73,14 +85,20 @@ void AddIdToList(List* list, char* id){
     printf("addid: %s\n", tmp);
     if(list->capacity <= list->position){
         char** idtran = list->list;
-        list->list = (char**)malloc(sizeof(char*) * list->capacity*2);
+        Type** typetran = list->types;
         list->capacity *= 2;
         
+        list->list = (char**)malloc(sizeof(char*) * list->capacity);
+        list->types = (Type**)malloc(sizeof(Type*) * list->capacity);       
+
         int pos = 0;
         for(pos = 0; pos < list->position; pos++){
             list->list[pos] = idtran[pos];
+            list->types[pos] = typetran[pos];
+
         }
         free(idtran);
+        free(typetran);
     }
 
     list->list[list->position++] = tmp;
@@ -99,3 +117,44 @@ Type* BuildType(const char* typeName){
     type->arr = NULL;
 }
 
+void AddDim(List* list, int size){
+    printf("test\n");
+    int pos = list->position;
+    if(list->types[pos] == NULL){
+        Type* tmp = (Type*)malloc(sizeof(Type));
+        tmp->arr = NULL;
+        list->types[pos] = tmp;
+    }
+
+    if(list->capacity <= list->position){
+        char** idtran = list->list;
+        Type** typetran = list->types;
+        list->capacity *= 2;
+        
+        list->list = (char**)malloc(sizeof(char*) * list->capacity);
+        list->types = (Type**)malloc(sizeof(Type*) * list->capacity);       
+
+        int pos = 0;
+        for(pos = 0; pos < list->position; pos++){
+            list->list[pos] = idtran[pos];
+            list->types[pos] = typetran[pos];
+
+        }
+        free(idtran);
+        free(typetran);
+    }
+
+    Array* current = list->types[pos]->arr;
+    Array* tmp = (Array*)malloc(sizeof(Array));
+    tmp->size = size;
+    tmp->higherDim = NULL;
+    if(current == NULL){
+        list->types[pos]->arr = tmp;
+    } else {
+        while(current->higherDim != NULL){
+            current = current->higherDim;
+        }
+        current->higherDim = tmp;
+    }
+
+}

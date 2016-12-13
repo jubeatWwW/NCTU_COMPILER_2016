@@ -13,7 +13,7 @@ typedef struct Attr Attr;
 typedef struct Array Array;
 typedef struct List List;
 
-SymbolTable* table;
+SymbolTable* symbolTable;
 List* list;
 extern TableEntry* tableEntry;
 
@@ -54,7 +54,9 @@ struct List{
     int position;
     int capacity;
     char** list;
+    Type** types;
 };
+
 
 SymbolTable* SymbolTableFactory();
 List* ListFactory();
@@ -67,3 +69,4 @@ Type* BuildType(const char* typeName);
 
 void AddIdToList(List*, char*);
 void PrintList(List*);
+void AddDim(List*, int);

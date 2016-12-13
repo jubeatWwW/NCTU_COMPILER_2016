@@ -14,12 +14,13 @@ extern char buf[256];
 
 %union {
     char* str;
+    int num;
     Type* type;
     //TableEntry* entry;
 }
 
 %token <str> ID
-%token	INT_CONST
+%token <num> INT_CONST
 %token	FLOAT_CONST
 %token	SCIENTIFIC
 %token	STR_CONST
@@ -127,19 +128,25 @@ parameter_list : parameter_list COMMA scalar_type ID
 var_decl : scalar_type identifier_list SEMICOLON
          {
             PrintList(list);
-            InsertListToTable(table, list, "variable", $1, NULL);
-            PrintSymbolTable(table);
+            InsertListToTable(symbolTable, list, "variable", $1, NULL);
+            PrintSymbolTable(symbolTable);
          }
 		 ;
 
-identifier_list : identifier_list COMMA ID {AddIdToList(list, $3);}
+identifier_list : identifier_list COMMA ID 
+                {
+                    AddIdToList(list, $3);
+                }
                 | identifier_list COMMA ID ASSIGN_OP logical_expression
 				| identifier_list COMMA array_decl ASSIGN_OP initial_array
 				| identifier_list COMMA array_decl
 				| array_decl ASSIGN_OP initial_array
 				| array_decl
 				| ID ASSIGN_OP logical_expression
-				| ID {AddIdToList(list, $1);}
+				| ID 
+                {
+                    AddIdToList(list, $1);
+                }
 				;
 
 initial_array : L_BRACE literal_list R_BRACE
@@ -158,13 +165,24 @@ const_list : const_list COMMA ID ASSIGN_OP literal_const
 		   ;
 
 array_decl : ID dim
+           {
+                AddIdToList(list, $1);
+           }
 		   ;
 
 dim : dim ML_BRACE INT_CONST MR_BRACE
+    {
+        AddDim(list, $3);
+    }
 	| ML_BRACE INT_CONST MR_BRACE
+    {
+        AddDim(list, $2);
+    }
 	;
 
-compound_statement : L_BRACE var_const_stmt_list R_BRACE
+compound_statement : L_BRACE {symbolTable->currentLevel++;}
+                     var_const_stmt_list 
+                     R_BRACE {symbolTable->currentLevel--;}
                    ;
 
 var_const_stmt_list : var_const_stmt_list statement	

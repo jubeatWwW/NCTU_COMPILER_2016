@@ -251,7 +251,7 @@ id *new_id();
 	
 -?0 |
 [1-9][0-9]* {
-		tokenString("integer", yytext);	return INT_CONST;
+		tokenString("integer", yytext);	yylval.num=atoi(yytext); return INT_CONST;
 	}
 [0-9]+\.[0-9]+	{
 		tokenString("float", yytext);	return FLOAT_CONST;
