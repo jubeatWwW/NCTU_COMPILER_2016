@@ -50,29 +50,43 @@ void PrintSymbolTable(SymbolTable* table){
     printf("\n");
     for(i=0; i<table->position; i++){
         tmp = table->entry[i];
-        printf("name: %s\tkind: %s\tlevel: %d\ttype: %s\n", tmp->name, tmp->kind, tmp->level, tmp->type);
+//        if(tmp->level == table->currentLevel){
+            printf("name: %s\tkind: %s\tlevel: %d\t", tmp->name, tmp->kind, tmp->level);
+            PrintType(tmp->type);
+            printf("\n");
+//       }
     }
     printf("\n");
 }
 
+void PrintType(Type* type){
+    Array* cur = type->arr;
+    printf("%s", type->name);
+    while(cur!=NULL){
+        printf("[%d]", cur->size);
+        cur = cur->higherDim;
+    }
+}
 
 void InsertListToTable(SymbolTable* table, List* list, const char* kind,Type* type, Attr* attr){
     int i;
     for(i=0; i<list->position; i++){
-        InsertEntry(table, list->list[i], kind, table->currentLevel, type, attr);
         if(list->types[i]!=NULL){
-            Array* cur = list->types[i]->arr;
+            /*Array* cur = list->types[i]->arr;
             while(cur!=NULL){
                 printf("dim: %d\n\n", cur->size);
                 cur = cur->higherDim;
-            }
+            }*/
+            strcpy(list->types[i]->name, type->name);
+            InsertEntry(table, list->list[i], kind, table->currentLevel, list->types[i], attr);
+        } else {
+            InsertEntry(table, list->list[i], kind, table->currentLevel, type, attr);
         }
+
     }
 
     for(i=list->position-1; i>=0; i--){
         free(list->list[i]);
-        if(list->types[i]!=NULL)
-            free(list->types[i]);
     }
     list->position = 0;
     list->capacity = 4;

@@ -108,9 +108,15 @@ funct_def : scalar_type ID L_PAREN R_PAREN compound_statement
                 printf("scalar: %s\n", $1);
                 printf("id: %s\n", $2);
           }
-		  | scalar_type ID L_PAREN parameter_list R_PAREN  compound_statement
+		  | scalar_type ID L_PAREN{symbolTable->currentLevel++;} 
+            parameter_list 
+            R_PAREN  {symbolTable->currentLevel--;}
+            compound_statement
 		  | VOID ID L_PAREN R_PAREN compound_statement
-		  | VOID ID L_PAREN parameter_list R_PAREN compound_statement
+		  | VOID ID L_PAREN {symbolTable->currentLevel++;}
+            parameter_list 
+            R_PAREN {symbolTable->currentLevel--;}
+            compound_statement
           ;
 
 funct_decl : scalar_type ID L_PAREN R_PAREN SEMICOLON
@@ -120,16 +126,23 @@ funct_decl : scalar_type ID L_PAREN R_PAREN SEMICOLON
 		   ;
 
 parameter_list : parameter_list COMMA scalar_type ID
+               {
+                    AddIdToList(list, $4);
+                    InsertListToTable(symbolTable, list, "parameter", $3, NULL);
+               }
 			   | parameter_list COMMA scalar_type array_decl
 			   | scalar_type array_decl
 			   | scalar_type ID
+               {
+                    AddIdToList(list, $2);
+                    InsertListToTable(symbolTable, list, "parameter", $1, NULL);
+               }
 			   ;
 
 var_decl : scalar_type identifier_list SEMICOLON
          {
             PrintList(list);
             InsertListToTable(symbolTable, list, "variable", $1, NULL);
-            PrintSymbolTable(symbolTable);
          }
 		 ;
 
@@ -182,7 +195,10 @@ dim : dim ML_BRACE INT_CONST MR_BRACE
 
 compound_statement : L_BRACE {symbolTable->currentLevel++;}
                      var_const_stmt_list 
-                     R_BRACE {symbolTable->currentLevel--;}
+                     R_BRACE {
+                        PrintSymbolTable(symbolTable);
+                        symbolTable->currentLevel--;
+                     }
                    ;
 
 var_const_stmt_list : var_const_stmt_list statement	
@@ -205,11 +221,27 @@ simple_statement : variable_reference ASSIGN_OP logical_expression SEMICOLON
 				 | READ variable_reference SEMICOLON
 				 ;
 
-conditional_statement : IF L_PAREN logical_expression R_PAREN L_BRACE var_const_stmt_list R_BRACE
+conditional_statement : IF L_PAREN logical_expression R_PAREN 
+                        L_BRACE{symbolTable->currentLevel++;} 
+                            var_const_stmt_list 
+                        R_BRACE {
+                            PrintSymbolTable(symbolTable);
+                            symbolTable->currentLevel--;
+                        }
 					  | IF L_PAREN logical_expression R_PAREN 
-					  		L_BRACE var_const_stmt_list R_BRACE
+					  		L_BRACE{symbolTable->currentLevel++;} 
+                                 var_const_stmt_list 
+                            R_BRACE {
+                                PrintSymbolTable(symbolTable);
+                                symbolTable->currentLevel--;
+                            }
 						ELSE
-							L_BRACE var_const_stmt_list R_BRACE
+					  		L_BRACE{symbolTable->currentLevel++;} 
+                                 var_const_stmt_list 
+                            R_BRACE {
+                                PrintSymbolTable(symbolTable);
+                                symbolTable->currentLevel--;
+                            }
 					  ;
 while_statement : WHILE L_PAREN logical_expression R_PAREN
 					L_BRACE var_const_stmt_list R_BRACE

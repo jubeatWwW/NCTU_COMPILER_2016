@@ -64,6 +64,7 @@ List* ListFactory();
 void InsertListToTable(SymbolTable*, List*, const char*, Type*, Attr*);
 void InsertEntry(SymbolTable*, const char*, const char*, int, Type*, Attr*);
 void PrintSymbolTable(SymbolTable*);
+void PrintType(Type*);
 
 Type* BuildType(const char* typeName);
 
