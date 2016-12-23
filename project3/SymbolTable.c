@@ -1,7 +1,7 @@
 #include "SymbolTable.h"
 
 SymbolTable* SymbolTableFactory(){
-    printf("table built\n");
+    //printf("table built\n");
     SymbolTable* symbolTable = (SymbolTable*)malloc(sizeof(SymbolTable));
     symbolTable->position = 0;
     symbolTable->currentLevel = 0;
@@ -48,14 +48,40 @@ void PrintSymbolTable(SymbolTable* table){
     int i;
     TableEntry* tmp;
     printf("\n");
+    for(i=0;i<110;i++) printf("=");
+    printf("\n");
+    printf("%-29s\t%-11s\t%-11s\t%-15s\t%-15s\n", "Name", "Kind", "Level", "Type", "Attribute");
+    for(i=0;i<110;i++) printf("-");
+    printf("\n");
     for(i=0; i<table->position; i++){
         tmp = table->entry[i];
-        if(tmp->level == table->currentLevel || (table->currentLevel == 0 && strcmp(tmp->kind, "parameter")==0) ){
-            printf("name: %s\tkind: %s\tlevel: %d\t", tmp->name, tmp->kind, tmp->level);
+        if(strcmp(tmp->kind, "parameter") == 0)
+            continue;
+        if(tmp->level == table->currentLevel || table->currentLevel == 0){
+            if(tmp->level == 0){
+                printf("%-29s\t%-11s\t%d%-11s\t", tmp->name, tmp->kind, tmp->level, "(global)");
+            } else {
+                printf("%-29s\t%-11s\t%d%-11s\t", tmp->name, tmp->kind, tmp->level, "(local)");
+                
+            }
             PrintType(tmp->type);
+            printf("%-11s", "");
+            if(strcmp(tmp->kind, "function") == 0 && i != 0){
+                int index = i-1;
+                while(strcmp(table->entry[index]->kind, "parameter") == 0 && index >= 0){
+                    index--;
+                }
+                int j;
+                for(j=index+1; j<=i-1; j++){
+                    PrintType(table->entry[j]->type);
+                    if(j != i-1)
+                        printf(",");
+                }
+            }
             printf("\n");
         }
     }
+    for(i=0;i<110;i++) printf("=");
     printf("\n");
 
     RemoveFromTable(table);
@@ -90,7 +116,7 @@ void InsertListToTable(SymbolTable* table, List* list, const char* kind,Type* ty
     int i;
     for(i=0; i<list->position; i++){
         int level = strcmp(kind, "parameter")==0 ? table->currentLevel+1 : table->currentLevel;
-        printf("insert %s to table\n", list->list[i]);
+        //printf("insert %s to table\n", list->list[i]);
         if(list->types[i]!=NULL){
             /*Array* cur = list->types[i]->arr;
             while(cur!=NULL){
@@ -117,7 +143,7 @@ void InsertListToTable(SymbolTable* table, List* list, const char* kind,Type* ty
 
 void AddIdToList(List* list, char* id){
     char* tmp = strdup(id);
-    printf("addid: %s\n", tmp);
+    //printf("addid: %s\n", tmp);
     if(list->capacity <= list->position){
         char** idtran = list->list;
         Type** typetran = list->types;
@@ -142,12 +168,11 @@ void AddIdToList(List* list, char* id){
 void PrintList(List* list){
     int i;
     for(i=0; i < list->position; i++){
-        printf("pos: %d, id:%s \n", i, list->list[i]);
+        //printf("pos: %d, id:%s \n", i, list->list[i]);
     }
 }
 
 Expr* BuildExpr(const char* kind, const char* id, Type* type, int dim){
-    printf("build expr\n");
     Expr* expr = (Expr*)malloc(sizeof(Expr));
     strcpy(expr->kind, kind);
     strcpy(expr->id, id);
@@ -165,7 +190,6 @@ Type* BuildType(const char* typeName){
 }
 
 void AddDim(List* list, int size){
-    printf("test\n");
     int pos = list->position;
     if(list->types[pos] == NULL){
         Type* tmp = (Type*)malloc(sizeof(Type));
@@ -210,23 +234,29 @@ void AddDim(List* list, int size){
 }
 
 Type* SearchType(SymbolTable* table, char* id){
-    printf("Search for %s\n", id);
+    //printf("Search for %s\n", id);
     int i;
     TableEntry* tmp;
-    for(i=0; i<table->position; i++){
+    int funcFlag = 0;
+    for(i=table->position-1; i>=0; i--){
         tmp = table->entry[i];
+        if(strcmp(tmp->kind, "function") == 0){
+            funcFlag++;
+        }
         if(tmp->level <= table->currentLevel && strcmp(id, tmp->name)==0){
-            printf("found %s, type: %s\n", id, tmp->type->name);
+            //printf("found %s, type: %s\n", id, tmp->type->name);
+            if(funcFlag > 1 && strcmp(tmp->kind, "parameter") == 0)
+                continue;
             return tmp->type;
         }
     }
+    printf("##########Error at Line #%d: %s is undefined.##########\n", linenum, id);
     return BuildType("None");
 }
 
 Expr* TypeCoercion(Expr* exp1, Expr* exp2){
-    printf("type cor, type1: %s, type2: %s\n", exp1->type->name, exp2->type->name);
     if(exp1->dim != exp1->type->hasArr || exp2->dim != exp2->type->hasArr){
-        printf("Illegal: array arithmetic\n");
+        printf("##########Error at Line #%d: %s.##########\n", linenum, "Illegal arithmetic");
     }
     if(strcmp(exp1->type->name, "double") == 0){
         if(strcmp(exp2->type->name, "float") == 0 || strcmp(exp2->type->name, "int") == 0){
@@ -251,20 +281,19 @@ Expr* TypeCoercion(Expr* exp1, Expr* exp2){
 }
 
 void TypeCoercionAssign(Expr* exp1, Expr* exp2){
-    printf("type cor assign, type1: %s, type2: %s\n", exp1->type->name, exp2->type->name);
     if(strcmp(exp2->type->name, "double") == 0){
         if(strcmp(exp1->type->name, "float") == 0 || strcmp(exp1->type->name, "int") == 0){
-            printf("Illegal cor\n");
+            printf("##########Error at Line #%d: %s.##########\n", linenum, "cannot convert to int/float");
         }
     }
     if(strcmp(exp2->type->name, "float") == 0){
         if(strcmp(exp1->type->name, "int") == 0){
-            printf("Illegal cor\n");
+            printf("##########Error at Line #%d: %s.##########\n", linenum, "cannot convert to int");
         }
     }
 
     if(exp1->dim != exp1->type->hasArr || exp2->dim != exp2->type->hasArr){
-        printf("Illegal: array assignment\n");
+        printf("##########Error at Line #%d: %s.##########\n", linenum, "array assignment");
     }
 }
 

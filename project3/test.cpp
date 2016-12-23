@@ -19,7 +19,7 @@ float Func(int a, int b, string c[2][3]){
 int main(){
 	
     Func(haha());
-
+    ccc();
     int How, I=5, learned[1][500][5]={0};
  	double to, stop[2][20];	
  	float worrying[1][2]={2.5}, and[3]={1}; 
@@ -32,5 +32,8 @@ int main(){
         float a1;
     }
     learned[1][2][3] = stop[3];
+    yayaya = yoyoyo;
+    int arrdel[5] = {1, 2, 3, 4 , 5};
+    int arrdel2[5] = {1, 2, 3, 4, 5, 6};
     return 0;
 }

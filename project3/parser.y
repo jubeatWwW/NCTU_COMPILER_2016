@@ -85,8 +85,13 @@ extern char buf[256];
 %type <expr> factor
 %type <expr> variable_reference
 %type <expr> array_list
+%type <expr> literal_const
 
 %type <num> dimension
+%type <num> literal_list
+%type <num> initial_array
+%type <num> dim
+%type <num> array_decl
 
 /*	Program 
 	Function 
@@ -201,8 +206,18 @@ identifier_list : identifier_list COMMA ID
                     AddIdToList(list, $3);
                 }
 				| identifier_list COMMA array_decl ASSIGN_OP initial_array
+                {
+                    if($3 < $5){
+                        printf("##########Error at Line #%d: too mush array initial.##########\n", linenum);
+                    }
+                }
 				| identifier_list COMMA array_decl
 				| array_decl ASSIGN_OP initial_array
+                {
+                    if($1 < $3){
+                        printf("##########Error at Line #%d: too mush array initial.##########\n", linenum);
+                    }
+                }
 				| array_decl
 				| ID ASSIGN_OP logical_expression
                 {
@@ -215,11 +230,23 @@ identifier_list : identifier_list COMMA ID
 				;
 
 initial_array : L_BRACE literal_list R_BRACE
+              {
+                $$ = $2;
+              }
 			  ;
 
 literal_list : literal_list COMMA logical_expression
+             {
+                $$ = $1+1;
+             }
 			 | logical_expression
-                         | 
+             {
+                $$ = 1;
+             }
+             |
+             {
+                $$ = 0;
+             } 
 			 ;
 
 const_decl : CONST scalar_type const_list SEMICOLON
@@ -241,16 +268,19 @@ const_list : const_list COMMA ID ASSIGN_OP literal_const
 array_decl : ID dim
            {
                 AddIdToList(list, $1);
+                $$ = $2;
            }
 		   ;
 
 dim : dim ML_BRACE INT_CONST MR_BRACE
     {
         AddDim(list, $3);
+        $$ = $1;
     }
 	| ML_BRACE INT_CONST MR_BRACE
     {
         AddDim(list, $2);
+        $$ = $2;
     }
 	;
 
@@ -285,7 +315,14 @@ simple_statement : variable_reference ASSIGN_OP logical_expression SEMICOLON
 				 | READ variable_reference SEMICOLON
 				 ;
 
-conditional_statement : IF L_PAREN logical_expression R_PAREN 
+conditional_statement : IF L_PAREN 
+                        logical_expression 
+                        {
+                            if(strcmp($3->type->name, "bool") != 0){
+                                printf("##########Error at Line #%d: control expression must be boolean.##########\n", linenum);
+                            }
+                        }
+                        R_PAREN 
                         L_BRACE{symbolTable->currentLevel++;} 
                             var_const_stmt_list 
                         R_BRACE {
@@ -345,6 +382,11 @@ control_expression_list : control_expression
 control_expression : control_expression COMMA variable_reference ASSIGN_OP logical_expression
 				   | control_expression COMMA logical_expression
 				   | logical_expression
+                   {
+                        if(strcmp($1->type->name, "bool") != 0){
+                            printf("##########Error at Line #%d: control expression must be boolean.##########\n", linenum);
+                        }
+                   }
 				   | variable_reference ASSIGN_OP logical_expression
 				   ;
 
@@ -465,11 +507,11 @@ factor : variable_reference
        }
 	   | SUB_OP factor
        {
-            $$ = BuildExpr("const", "const", BuildType("bool"), 0);
+            $$ = $2;
        }
 	   | L_PAREN logical_expression R_PAREN
        {
-            $$ = BuildExpr("const", "const", BuildType("bool"), 0);
+            $$ = $2;
        }
 	   | SUB_OP L_PAREN logical_expression R_PAREN
        {
@@ -485,7 +527,7 @@ factor : variable_reference
        }
 	   | literal_const
        {
-            $$ = BuildExpr("const", "const", BuildType("bool"), 0);
+            $$ = $1;
        }
 	   | SUB_OP ID L_PAREN logical_expression R_PAREN
        {
@@ -509,12 +551,10 @@ array_list : ID dimension
 
 dimension : dimension ML_BRACE logical_expression MR_BRACE
           {
-                printf("dim add 1\n");
                 $$ = $1 + 1;
           }
 		  | ML_BRACE logical_expression MR_BRACE
           {
-              printf("has 1 dim\n");
               $$ = 1;
           }
 		  ;
@@ -528,15 +568,15 @@ scalar_type : INT       {$$ = BuildType("int");}
 			| FLOAT     {$$ = BuildType("float");}
 			;
  
-literal_const : INT_CONST
-			  | SUB_OP INT_CONST
-			  | FLOAT_CONST
-			  | SUB_OP FLOAT_CONST
-			  | SCIENTIFIC
-			  | SUB_OP SCIENTIFIC
-			  | STR_CONST
-			  | TRUE
-			  | FALSE
+literal_const : INT_CONST {$$ = BuildExpr("const", "const", BuildType("int"), 0);}
+			  | SUB_OP INT_CONST {$$ = BuildExpr("const", "const", BuildType("int"), 0);} 
+			  | FLOAT_CONST {$$ = BuildExpr("const", "const", BuildType("float"), 0);} 
+			  | SUB_OP FLOAT_CONST {$$ = BuildExpr("const", "const", BuildType("float"), 0);} 
+			  | SCIENTIFIC {$$ = BuildExpr("const", "const", BuildType("double"), 0);} 
+			  | SUB_OP SCIENTIFIC {$$ = BuildExpr("const", "const", BuildType("double"), 0);} 
+			  | STR_CONST {$$ = BuildExpr("const", "const", BuildType("string"), 0);} 
+			  | TRUE {$$ = BuildExpr("const", "const", BuildType("bool"), 0);} 
+			  | FALSE {$$ = BuildExpr("const", "const", BuildType("bool"), 0);} 
 			  ;
 %%
 
