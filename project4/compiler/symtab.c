@@ -51,7 +51,7 @@ struct SymNode* createVarNode( const char *name, int scope, struct PType *type ,
 	return newNode;
 }
 
-struct SymNode* createParamNode( const char *name, int scope, struct PType *type )
+struct SymNode* createParamNode( const char *name, int scope, struct PType *type, int varNo )
 {
 	struct SymNode *newNode = (struct SymNode *)malloc( sizeof(struct SymNode) );
 	/* setup name */
@@ -65,6 +65,9 @@ struct SymNode* createParamNode( const char *name, int scope, struct PType *type
 	newNode->category = PARAMETER_t;
 	/* without attribute */
 	newNode->attribute = 0;
+	newNode->attribute = (union SymAttr*)malloc(sizeof(int));
+    
+    newNode->attribute->varNo = varNo;
 
 	newNode->next = 0;
 	newNode->prev = 0;

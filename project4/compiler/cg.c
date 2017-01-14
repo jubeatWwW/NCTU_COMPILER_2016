@@ -116,3 +116,131 @@ void FuncSt(const char* name, Param* param, PType* ret){
     
 }
 
+void FunctionCall(const char* name){
+    SymNode* node = lookupSymbol(symbolTable, name, 0, __FALSE);
+    if(node){
+        char funcins[128];
+        snprintf(funcins, sizeof(funcins), "invokestatic %s/%s(",fileName,name);
+        
+        PTypeList* list = node->attribute->formalParam->params;
+        while(0 != list){
+            switch(list->value->type){
+                case INTEGER_t:
+                    strcat(funcins, "I");
+                    break;
+                case FLOAT_t:
+                    strcat(funcins, "F");
+                    break;
+                case DOUBLE_t:
+                    strcat(funcins, "D");
+                    break;
+                case BOOLEAN_t:
+                    strcat(funcins, "Z");
+                    break;
+            }
+            list = list->next;
+        }
+
+        switch(node->type->type){
+            case INTEGER_t:
+                strcat(funcins, ")I");
+                break;
+            case FLOAT_t:
+                strcat(funcins, ")F");
+                snprintf(funcins, sizeof(funcins), "%s%s", funcins, ")F");
+                break;
+            case DOUBLE_t:
+                strcat(funcins, ")D");
+                break;
+            case BOOLEAN_t:
+                strcat(funcins, ")Z");
+                break;
+        }
+        
+        fprintf(fout, "%s\n", funcins);
+        
+    }   
+}
+
+void ConstExpr(ConstAttr* constattr){
+    switch(constattr->category){
+        case STRING_t:
+            fprintf(fout, "ldc \"%s\"\n", constattr->value.stringVal);
+            break;
+        case INTEGER_t:
+            fprintf(fout, "sipush %d\n", constattr->value.integerVal);
+            break;
+        case FLOAT_t:
+            fprintf(fout, "ldc %lf\n", constattr->value.floatVal);
+            break;
+        case DOUBLE_t:
+            fprintf(fout, "ldc \"%s\"\n", constattr->value.doubleVal);
+            break;
+        case BOOLEAN_t:
+            fprintf(fout, "iconst_%d\n", constattr->value.booleanVal);
+            break;
+    }
+}
+
+void IdExpr(ExprSem* expr){
+    if(!expr || !expr->varRef)
+        return;
+
+    char* name = expr->varRef->id;
+    SymNode* node = lookupSymbol(symbolTable, name, scope, __FALSE);
+    
+    if(node){
+        SEMTYPE t = node->category;
+        printf("RRRRRRRRRR\n");
+        if(CONSTANT_t == t){
+            switch(expr->pType->type){
+                case INTEGER_t:
+                    fprintf(fout, "sipush %d\n", node->attribute->constVal->value.integerVal);
+                    break;
+                case FLOAT_t:
+                    fprintf(fout, "ldc %lf\n", node->attribute->constVal->value.floatVal);
+                    break;
+                case DOUBLE_t:
+                    fprintf(fout, "ldc %lf\n", node->attribute->constVal->value.doubleVal);
+                    break;
+                case BOOLEAN_t:
+                    fprintf(fout, "iconst_%d\n", node->attribute->constVal->value.booleanVal);
+                    break;
+            }
+        } else if((VARIABLE_t == t || PARAMETER_t == t) && 0 != node->scope){
+            printf("RRRRRRRRRRVAR\n");
+            printf("%s\n", name);
+            switch(expr->pType->type){
+                case INTEGER_t:
+                    fprintf(fout, "iload %d\n", node->attribute->varNo);
+                    break;
+                case FLOAT_t:
+                    fprintf(fout, "fload %d\n", node->attribute->varNo);
+                    break;
+                case DOUBLE_t:
+                    fprintf(fout, "iload %d\n", node->attribute->varNo);
+                    break;
+                case BOOLEAN_t:
+                    fprintf(fout, "iload %d\n", node->attribute->varNo);
+                    break;
+            }
+        } else if(VARIABLE_t == t && 0 == node->scope){
+            switch(expr->pType->type){
+                case INTEGER_t:
+                    fprintf(fout, "getstatic %s/%s I\n", fileName, node->name);
+                    break;
+                case FLOAT_t:
+                    fprintf(fout, "getstatic %s/%s F\n", fileName, node->name);
+                    break;
+                case DOUBLE_t:
+                    fprintf(fout, "getstatic %s/%s D\n", fileName, node->name);
+                    break;
+                case BOOLEAN_t:
+                    fprintf(fout, "getstatic %s/%s Z\n", fileName, node->name);
+                    break;
+            }
+            
+        }
+    }
+}
+

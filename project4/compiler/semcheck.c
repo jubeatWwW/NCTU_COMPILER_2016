@@ -870,7 +870,7 @@ __BOOLEAN insertParamIntoSymTable( struct SymTable *table, struct param_sem *par
 				for( idPtr=(parPtr->idlist) ; idPtr!=0 ; idPtr=(idPtr->next) ) {
 					if( verifyRedeclaration( table, idPtr->value, scope ) ==__FALSE ) { result = __TRUE;  }
 					else {	// without error, insert into symbol table
-						newNode = createParamNode( idPtr->value, scope, parPtr->pType );
+						newNode = createParamNode( idPtr->value, scope, parPtr->pType, varNo++ );
 						insertTab( table, newNode );
 					}
 				}

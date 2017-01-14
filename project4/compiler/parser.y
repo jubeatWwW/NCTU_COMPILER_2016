@@ -647,6 +647,7 @@ factor : variable_reference
 			verifyExistence( symbolTable, $1, scope, __FALSE );
 			$$ = $1;
 			$$->beginningOp = NONE_t;
+            IdExpr($1);
 		}
 	   | SUB_OP variable_reference
 		{
@@ -670,11 +671,13 @@ factor : variable_reference
 		{
 			$$ = verifyFuncInvoke( $1, $3, symbolTable, scope );
 			$$->beginningOp = NONE_t;
+            FunctionCall($1);
 		}
 	   | SUB_OP ID L_PAREN logical_expression_list R_PAREN
 	    {
 			$$ = verifyFuncInvoke( $2, $4, symbolTable, scope );
 			$$->beginningOp = SUB_t;
+            FunctionCall($2);
 		}
 	   | ID L_PAREN R_PAREN
 		{
@@ -699,6 +702,7 @@ factor : variable_reference
 			  else {
 				$$->beginningOp = NONE_t;
 			  }
+              ConstExpr($1);
 		}
 	   ;
 

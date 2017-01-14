@@ -332,11 +332,11 @@ float scientificToFloat( const char *str );
 
 <STR>\"	{
 		//LIST;
-		//strcat( buf, "\"");
 		yylval.lexeme = strdup(strContent);	/* pass STR_CONST to parser */
 	
 		if( Opt_Token)
 			tokenString("string", strContent);
+		strcat( buf, "\"");
 		BEGIN INITIAL;
 		return STR_CONST;
 	}

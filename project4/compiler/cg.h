@@ -10,6 +10,8 @@ typedef struct param_sem Param;
 typedef struct PType PType;
 typedef struct InstrStack InstrStack;
 typedef struct expr_sem ExprSem;
+typedef struct ConstAttr ConstAttr;
+typedef struct PTypeList PTypeList;
 
 extern int linenum;
 extern FILE* fout;
@@ -37,4 +39,6 @@ void GlobalVar(const char* name, PType* ptype);
 void ReadVar(ExprSem *expr);
 void FuncSt(const char* name, Param* param, PType* ret);
 
-
+void FunctionCall(const char* name);
+void ConstExpr(ConstAttr* constattr);
+void IdExpr(ExprSem* expr);
