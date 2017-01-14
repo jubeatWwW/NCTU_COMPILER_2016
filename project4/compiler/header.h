@@ -100,6 +100,7 @@ struct varDeclParam{
 union SymAttr {
 	struct ConstAttr *constVal;
 	struct FuncAttr *formalParam;
+    int varNo;
 };
 // structure for symbol table
 struct SymNode {

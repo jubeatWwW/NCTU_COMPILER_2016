@@ -8,10 +8,10 @@
 #define tokenString(t, s)   {LIST; if (Opt_Token) printf("<%s:%s>\n", t, s);}
 #define MAX_LINE_LENG 256
 #define MAX_ID_LENG 256 
-int Opt_Source = 0;
+int Opt_Source = 1;
 int Opt_Token = 0;
 int Opt_Statistic = 0;
-int Opt_Symbol = 0;
+int Opt_Symbol = 1;
 int linenum = 1;
 char buf[MAX_LINE_LENG];
 char strContent[MAX_LINE_LENG];
@@ -23,6 +23,8 @@ typedef struct ids{
 id *id_head;
 void set(id **, char *);
 id *new_id();
+
+extern FILE* fout;
 
 float scientificToFloat( const char *str );
 %}
@@ -150,6 +152,7 @@ float scientificToFloat( const char *str );
 		LIST;
   	      if (Opt_Source)
   	        printf("%d:%s\n", linenum, buf);
+          fprintf("%d:%s\n", linenum, buf);
   	      linenum++;
   	      buf[0] = '\0';
 		  BEGIN INITIAL;
@@ -350,6 +353,7 @@ float scientificToFloat( const char *str );
 		LIST;
 		if (Opt_Source)
   	        	printf("%d:%s\n", linenum, buf);
+        fprintf(fout, "%d:%s", linenum, buf);
 		linenum++;
 		memset( buf, 0, MAX_LINE_LENG );
 	}
@@ -369,6 +373,9 @@ float scientificToFloat( const char *str );
   	      LIST;
   	      if (Opt_Source)
   	        printf("%d:%s\n", linenum, buf);
+          
+          fprintf(fout, "%d:%s", linenum, buf);
+          
   	      linenum++;
   	      buf[0] = '\0';
         }
@@ -377,7 +384,7 @@ float scientificToFloat( const char *str );
 		if(Opt_Statistic){
 			set(&id_head,yytext);
 		}
-		tokenString("id",yytext);	
+		//tokenString("id",yytext);	
 		char actualID[33];
 		memset( actualID, 0, sizeof(actualID) );
 		strncpy( actualID, yytext, 32 );

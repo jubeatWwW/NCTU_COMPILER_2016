@@ -6,6 +6,7 @@
 #include "header.h"
 #include "symtab.h"
 #include "semcheck.h"
+#include "cg.h"
 
 extern int linenum;
 extern FILE	*yyin;
@@ -20,6 +21,9 @@ __BOOLEAN paramError;
 struct PType *funcReturn;
 __BOOLEAN semError = __FALSE;
 int inloop = 0;
+
+int varNo = 1;
+int hasRead = 0;
 
 %}
 
@@ -56,15 +60,19 @@ int inloop = 0;
 %type<varDeclNode> identifier_list
 
 
-%start program
+%start program 
 %%
 
-program :		decl_list 
+prog_st : {ProgSt(fileName);}
+        ;
+
+program :		prog_st
+                decl_list
 			    funct_def
 				decl_and_def_list 
 				{
 					if(Opt_Symbol == 1)
-					printSymTable( symbolTable, scope );	
+					printSymTable( symbolTable, scope );
 				}
 		;
 
@@ -226,7 +234,11 @@ var_decl : scalar_type identifier_list SEMICOLON
 					if( verifyRedeclaration( symbolTable, ptr->para->idlist->value, scope ) == __FALSE ) { }
 					else {
 						if( verifyVarInitValue( $1, ptr, symbolTable, scope ) ==  __TRUE ){	
-							newNode = createVarNode( ptr->para->idlist->value, scope, ptr->para->pType );
+                            if(0 == scope){
+                                GlobalVar(ptr->para->idlist->value, ptr->para->pType);
+	    						newNode = createVarNode( ptr->para->idlist->value, scope, ptr->para->pType, 0 );
+                            } else
+							    newNode = createVarNode( ptr->para->idlist->value, scope, ptr->para->pType, varNo++ );
 							insertTab( symbolTable, newNode );											
 						}
 					}
@@ -427,8 +439,10 @@ simple_statement : variable_reference ASSIGN_OP logical_expression SEMICOLON
 				 | PRINT logical_expression SEMICOLON { verifyScalarExpr( $2, "print" ); }
 				 | READ variable_reference SEMICOLON 
 					{ 
-						if( verifyExistence( symbolTable, $2, scope, __TRUE ) == __TRUE )						
+						if( verifyExistence( symbolTable, $2, scope, __TRUE ) == __TRUE ){
 							verifyScalarExpr( $2, "read" ); 
+                            ReadVar($2);
+                        }
 					}
 				 ;
 

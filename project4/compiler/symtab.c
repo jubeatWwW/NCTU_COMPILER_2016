@@ -28,7 +28,7 @@ void insertTab( struct SymTable *table, struct SymNode *newNode )
 	}
 }
 
-struct SymNode* createVarNode( const char *name, int scope, struct PType *type ) 
+struct SymNode* createVarNode( const char *name, int scope, struct PType *type , int varNo) 
 {
 	struct SymNode *newNode = (struct SymNode *)malloc( sizeof(struct SymNode) );
 	/* setup name */
@@ -41,7 +41,9 @@ struct SymNode* createVarNode( const char *name, int scope, struct PType *type )
 	/* Category: variable */
 	newNode->category = VARIABLE_t;
 	/* without attribute */
-	newNode->attribute = 0;
+	newNode->attribute = (union SymAttr*)malloc(sizeof(int));
+    
+    newNode->attribute->varNo = varNo;
 
 	newNode->next = 0;
 	newNode->prev = 0;
@@ -318,6 +320,8 @@ void printSymTable( struct SymTable *table, int __scope )
 						break;
 					}
 				}
+
+                printf("\t%d", ptr->attribute->varNo);
 
 				printf("\n");
 			}	// if( ptr->scope == __scope )

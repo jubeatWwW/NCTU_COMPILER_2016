@@ -9,7 +9,7 @@ void insertTab( struct SymTable *table, struct SymNode *newNode );
 void pushLoopVar( struct SymTable *table, struct SymNode *newNode );
 void popLoopVar( struct SymTable *table );
 struct SymNode *createLoopVarNode( const char *name );
-struct SymNode* createVarNode( const char *name, int scope, struct PType *type );
+struct SymNode* createVarNode( const char *name, int scope, struct PType *type, int varNo );
 struct SymNode* createParamNode( const char *name, int scope, struct PType *type );
 //struct SymNode* createVarNode( const char *name, int scope, struct PType *type ); 
 struct SymNode * createConstNode( const char *name, int scope, struct PType *pType, struct ConstAttr *constAttr );
