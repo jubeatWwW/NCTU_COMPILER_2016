@@ -152,7 +152,7 @@ float scientificToFloat( const char *str );
 		LIST;
   	      if (Opt_Source)
   	        printf("%d:%s\n", linenum, buf);
-          fprintf("%d:%s\n", linenum, buf);
+          fprintf("; LINE #%d:\t%s\n", linenum, buf);
   	      linenum++;
   	      buf[0] = '\0';
 		  BEGIN INITIAL;
@@ -353,7 +353,7 @@ float scientificToFloat( const char *str );
 		LIST;
 		if (Opt_Source)
   	        	printf("%d:%s\n", linenum, buf);
-        fprintf(fout, "%d:%s", linenum, buf);
+        fprintf(fout, "; LINE #%d:\t%s", linenum, buf);
 		linenum++;
 		memset( buf, 0, MAX_LINE_LENG );
 	}
@@ -374,7 +374,7 @@ float scientificToFloat( const char *str );
   	      if (Opt_Source)
   	        printf("%d:%s\n", linenum, buf);
           
-          fprintf(fout, "%d:%s", linenum, buf);
+          fprintf(fout, "; LINE #%d:\t%s", linenum, buf);
           
   	      linenum++;
   	      buf[0] = '\0';

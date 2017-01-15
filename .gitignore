@@ -8,3 +8,10 @@ y.tab.c
 y.tab.h
 y.output
 *.j
+
+project4/jasmin/*.c
+project4/jasmin/*.j
+project4/jasmin/*.class
+project4/jasmin/input
+project4/jasmin/parser
+

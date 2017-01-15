@@ -35,11 +35,18 @@ void InstrStackClear();
 void InstrStackPrint();
 
 void ProgSt(const char* name);
+void ProgEnd();
+void MainFunc();
 
 void GlobalVar(const char* name, PType* ptype);
 void ReadVar(ExprSem *expr);
+void PrintVarPre();
+void PrintVar(ExprSem* expr);
+void AssignToVar(ExprSem* var, ExprSem* booleanExp);
+
 void FuncSt(const char* name, Param* param, PType* ret);
 void FuncEnd(PType* ret);
+void FuncReturn(ExprSem* ret);
 
 void FunctionCall(const char* name);
 void ConstExpr(ConstAttr* constattr);

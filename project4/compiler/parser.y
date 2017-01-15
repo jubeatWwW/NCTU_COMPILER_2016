@@ -97,17 +97,35 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 				struct SymNode *node;
 				node = findFuncDeclaration( symbolTable, $2 );
 				
+
+:q
+:q
+exit
+                
 				if( node != 0 ){
 					verifyFuncDeclaration( symbolTable, 0, $1, node );
 				}
 				else{
 					insertFuncIntoSymTable( symbolTable, $2, 0, $1, scope, __TRUE );
 				}
+                
+                if(0 == strcmp($2, "main")){
+                    MainFunc();
+                } else {
+                    FuncSt($2, 0, $1);
+                }
 			}
-			compound_statement { funcReturn = 0; }	
+			compound_statement { funcReturn = 0; 
+                if(0 == strcmp($2, "main")){
+                    FuncEnd(createPType(VOID_t));
+                } else {
+                    FuncEnd($1);
+                }
+            }	
 		  | scalar_type ID L_PAREN parameter_list R_PAREN  
 			{				
 				funcReturn = $1;
+                
 				
 				paramError = checkFuncParam( $4 );
 				if( paramError == __TRUE ){
@@ -128,13 +146,26 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 						insertParamIntoSymTable( symbolTable, $4, scope+1 );				
 						insertFuncIntoSymTable( symbolTable, $2, $4, $1, scope, __TRUE );
 					}
-                    FuncSt($2, $4, $1);
+
+                    if(0 == strcmp($2, "main")){
+                        MainFunc();
+                    } else {
+                        FuncSt($2, $4, $1);
+                    }
+                    
                     
 				}
 			} 	
-			compound_statement { funcReturn = 0; FuncEnd($1);}
+			compound_statement { funcReturn = 0; 
+                if(0 == strcmp($2, "main")){
+                    FuncEnd(createPType(VOID_t));
+                } else {
+                    FuncEnd($1);
+                }
+            }
 		  | VOID ID L_PAREN R_PAREN 
 			{
+                
 				funcReturn = createPType(VOID_t); 
 				struct SymNode *node;
 				node = findFuncDeclaration( symbolTable, $2 );
@@ -145,12 +176,18 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 				else{
 					insertFuncIntoSymTable( symbolTable, $2, 0, createPType( VOID_t ), scope, __TRUE );	
 				}
+
+                if(0 == strcmp($2, "main")){
+                    MainFunc();
+                } else {
+                    FuncSt($2, 0, funcReturn);
+                }
 			}
-			compound_statement { funcReturn = 0; }	
+			compound_statement { funcReturn = 0; FuncEnd(funcReturn);}	
 		  | VOID ID L_PAREN parameter_list R_PAREN
 			{									
 				funcReturn = createPType(VOID_t);
-				
+                        
 				paramError = checkFuncParam( $4 );
 				if( paramError == __TRUE ){
 					fprintf( stdout, "########## Error at Line#%d: param(s) with several fault!! ##########\n", linenum );
@@ -171,8 +208,17 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 						insertFuncIntoSymTable( symbolTable, $2, $4, createPType( VOID_t ), scope, __TRUE );
 					}
 				}
+                
+                if(0 == strcmp($2, "main")){
+                    MainFunc();
+                } else {
+                    FuncSt($2, $4, funcReturn);
+                }
 			} 
-			compound_statement { funcReturn = 0; }		  
+			compound_statement { 
+                funcReturn = 0; 
+                FuncEnd(funcReturn);
+            }		  
 		  ;
 
 funct_decl : scalar_type ID L_PAREN R_PAREN SEMICOLON
@@ -182,6 +228,8 @@ funct_decl : scalar_type ID L_PAREN R_PAREN SEMICOLON
 		   | scalar_type ID L_PAREN parameter_list R_PAREN SEMICOLON
 		    {
 				paramError = checkFuncParam( $4 );
+                    printf("??\n");
+                    varNo = 0;
 				if( paramError == __TRUE ){
 					fprintf( stdout, "########## Error at Line#%d: param(s) with several fault!! ##########\n", linenum );
 					semError = __TRUE;
@@ -437,8 +485,18 @@ simple_statement : variable_reference ASSIGN_OP logical_expression SEMICOLON
 						// if both LHS and RHS are exists, verify their type
 						if( flagLHS==__TRUE && flagRHS==__TRUE )
 							verifyAssignmentTypeMatch( $1, $3 );
+                        
+                        AssignToVar($1, $3);
 					}
-				 | PRINT logical_expression SEMICOLON { verifyScalarExpr( $2, "print" ); }
+				 | PRINT 
+                    {
+                        PrintVarPre();
+                    }
+                    logical_expression SEMICOLON 
+                    { 
+                        verifyScalarExpr( $3, "print" ); 
+                        PrintVar($3);
+                    }
 				 | READ variable_reference SEMICOLON 
 					{ 
 						if( verifyExistence( symbolTable, $2, scope, __TRUE ) == __TRUE ){
@@ -552,6 +610,7 @@ jump_statement : CONTINUE SEMICOLON
 				}
 			   | RETURN logical_expression SEMICOLON
 				{
+                    //FuncReturn($2);   
 					verifyReturnStatement( $2, funcReturn );
 				}
 			   ;

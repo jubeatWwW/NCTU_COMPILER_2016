@@ -5,8 +5,14 @@ int label = 0;
 void ProgSt(const char* name){
     fprintf(fout, "; %s\n", name);
     fprintf(fout, ".class public %s\n", name);
-    fprintf(fout, ".super java/lang//Object\n");
+    fprintf(fout, ".super java/lang/Object\n");
     fprintf(fout, ".field public static _sc Ljava/util/Scanner;\n");
+}
+
+void MainFunc(){
+    fprintf(fout, ".method public static main([Ljava/lang/String;)V\n");
+    fprintf(fout, ".limit stack 100\n");
+    fprintf(fout, ".limit locals 100\n");
 }
 
 void InstrStackPush(const char* ins){
@@ -113,6 +119,90 @@ void ReadVar(ExprSem* expr){
     }
 
 }
+
+void PrintVarPre(){
+    fprintf(fout, "getstatic java/lang/System/out Ljava/io/PrintStream;\n");
+}
+
+void PrintVar(ExprSem* expr){
+    switch(expr->pType->type){
+        case INTEGER_t:
+            fprintf(fout, "invokevirtual java/io/PrintStream/print(I)V\n");
+            break;
+        case FLOAT_t:
+            fprintf(fout, "invokevirtual java/io/PrintStream/print(F)V\n");
+            break;
+        case DOUBLE_t:
+            fprintf(fout, "invokevirtual java/io/PrintStream/print(D)V\n");
+            break;
+        case BOOLEAN_t:
+            fprintf(fout, "invokevirtual java/io/PrintStream/print(Z)V\n");
+            break;
+        case STRING_t:
+            fprintf(fout, "invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n");
+            break;
+    }
+}
+
+void AssignToVar(ExprSem* var, ExprSem* booleanExp){
+    if(0 == var->varRef)
+        return;
+    char* name = var->varRef->id;
+    SEMTYPE t = var->pType->type;
+
+    SymNode* node = lookupSymbol(symbolTable, name, scope, __FALSE);
+
+    if(0 == node)
+        return;
+    
+    if(VARIABLE_t == node->category){
+        if(0 == node->scope){
+            switch(t){
+                case INTEGER_t:
+                    fprintf(fout, "putstatic %s/%s I\n", fileName, node->name);
+                    break;
+                case FLOAT_t:
+                    if(INTEGER_t == booleanExp->pType->type)
+                        fprintf(fout, "i2f\nputstatic %s/%s F\n", fileName, node->name);
+                    else
+                        fprintf(fout, "putstatic %s/%s F\n", fileName, node->name);
+                    break;
+                case DOUBLE_t:
+                    if(INTEGER_t == booleanExp->pType->type)
+                        fprintf(fout, "i2f\nputstatic %s/%s D\n", fileName, node->name);
+                    else
+                        fprintf(fout, "putstatic %s/%s D\n", fileName, node->name);
+                    break;
+                case BOOLEAN_t:
+                    fprintf(fout, "putstatic %s/%s Z\n", fileName, node->name);
+                    break;
+
+            }
+        } else {
+            switch(t){
+                case INTEGER_t:
+                    fprintf(fout, "istore %d\n", node->attribute->varNo);
+                    break;
+                case FLOAT_t:
+                    if(INTEGER_t == booleanExp->pType->type)
+                        fprintf(fout, "i2f\nfstore %d\n", node->attribute->varNo);
+                    else
+                        fprintf(fout, "fstore %d\n", node->attribute->varNo);
+                    break;
+                case DOUBLE_t:
+                    if(INTEGER_t == booleanExp->pType->type)
+                        fprintf(fout, "i2f\nfstore %d\n", node->attribute->varNo);
+                    else
+                        fprintf(fout, "fstore %d\n", node->attribute->varNo);
+                    break;
+                case BOOLEAN_t:
+                    fprintf(fout, "istore %d\n", node->attribute->varNo);
+                    break;
+            }
+        }
+    }
+}
+
 
 void FuncSt(const char* name, Param* param, PType* ret){
     char funcdecl[128];
@@ -224,6 +314,18 @@ void FunctionCall(const char* name){
     }   
 }
 
+void FuncReturn(ExprSem* ret){
+    SEMTYPE t = ret->pType->type;
+    if(INTEGER_t == t || BOOLEAN_t == t){
+        fprintf(fout, "ireturn\n");
+    } else if(FLOAT_t == t || DOUBLE_t == t){
+        fprintf(fout, "freturn\n");
+    } else {
+        fprintf(fout, "return\n");
+    }
+}
+
+
 void ConstExpr(ConstAttr* constattr){
     switch(constattr->category){
         case STRING_t:
@@ -253,7 +355,6 @@ void IdExpr(ExprSem* expr){
     
     if(node){
         SEMTYPE t = node->category;
-        printf("RRRRRRRRRR\n");
         if(CONSTANT_t == t){
             switch(expr->pType->type){
                 case INTEGER_t:
@@ -270,8 +371,6 @@ void IdExpr(ExprSem* expr){
                     break;
             }
         } else if((VARIABLE_t == t || PARAMETER_t == t) && 0 != node->scope){
-            printf("RRRRRRRRRRVAR\n");
-            printf("%s\n", name);
             switch(expr->pType->type){
                 case INTEGER_t:
                     fprintf(fout, "iload %d\n", node->attribute->varNo);
