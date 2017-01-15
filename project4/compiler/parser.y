@@ -96,11 +96,6 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 				funcReturn = $1; 
 				struct SymNode *node;
 				node = findFuncDeclaration( symbolTable, $2 );
-				
-
-:q
-:q
-exit
                 
 				if( node != 0 ){
 					verifyFuncDeclaration( symbolTable, 0, $1, node );
@@ -125,7 +120,7 @@ exit
 		  | scalar_type ID L_PAREN parameter_list R_PAREN  
 			{				
 				funcReturn = $1;
-                
+                varNo = 0;
 				
 				paramError = checkFuncParam( $4 );
 				if( paramError == __TRUE ){
@@ -187,6 +182,7 @@ exit
 		  | VOID ID L_PAREN parameter_list R_PAREN
 			{									
 				funcReturn = createPType(VOID_t);
+                varNo = 0;
                         
 				paramError = checkFuncParam( $4 );
 				if( paramError == __TRUE ){
@@ -228,8 +224,6 @@ funct_decl : scalar_type ID L_PAREN R_PAREN SEMICOLON
 		   | scalar_type ID L_PAREN parameter_list R_PAREN SEMICOLON
 		    {
 				paramError = checkFuncParam( $4 );
-                    printf("??\n");
-                    varNo = 0;
 				if( paramError == __TRUE ){
 					fprintf( stdout, "########## Error at Line#%d: param(s) with several fault!! ##########\n", linenum );
 					semError = __TRUE;
