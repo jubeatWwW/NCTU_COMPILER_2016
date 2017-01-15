@@ -1,5 +1,7 @@
 #include "cg.h"
 
+int label = 0;
+
 void ProgSt(const char* name){
     fprintf(fout, "; %s\n", name);
     fprintf(fout, ".class public %s\n", name);
@@ -113,8 +115,68 @@ void ReadVar(ExprSem* expr){
 }
 
 void FuncSt(const char* name, Param* param, PType* ret){
+    char funcdecl[128];
+    snprintf(funcdecl, sizeof(funcdecl), ".method public static %s(", name);
     
+    Param* list = param;
+    NodeSem* node;
+    while(0 != list){
+        node = list->idlist;
+        while(0 != node){
+            switch(list->pType->type){
+                case INTEGER_t:
+                    strcat(funcdecl, "I");
+                    break;
+                case FLOAT_t:
+                    strcat(funcdecl, "F");
+                    break;
+                case DOUBLE_t:
+                    strcat(funcdecl, "D");
+                    break;
+                case BOOLEAN_t:
+                    strcat(funcdecl, "Z");
+                    break;
+            }
+            node = node->next;
+        }
+        list = list->next;
+    }
+
+    switch(ret->type){
+        case INTEGER_t:
+            strcat(funcdecl, ")I\n");
+            break;
+        case FLOAT_t:
+            strcat(funcdecl, ")F\n");
+            break;
+        case DOUBLE_t:
+            strcat(funcdecl, ")D\n");
+            break;
+        case BOOLEAN_t:
+            strcat(funcdecl, ")Z\n");
+            break;
+        case VOID_t:
+            strcat(funcdecl, ")V\n");
+            break;
+    }
+
+    fprintf(fout, "%s", funcdecl);
+    fprintf(fout, ".limit stack 100\n");
+    fprintf(fout, ".limit locals 100\n");
 }
+
+void FuncEnd(PType* ret){
+    if(INTEGER_t == ret->type || BOOLEAN_t == ret->type){
+        fprintf(fout, "ireturn\n");
+    } else if(FLOAT_t == ret->type || DOUBLE_t == ret->type){
+        fprintf(fout, "freturn\n");
+    } else{
+        fprintf(fout, "return\n");
+    }
+
+    fprintf(fout, ".end method\n");
+}
+
 
 void FunctionCall(const char* name){
     SymNode* node = lookupSymbol(symbolTable, name, 0, __FALSE);
@@ -241,6 +303,123 @@ void IdExpr(ExprSem* expr){
             }
             
         }
+    }
+}
+
+void Oper(ExprSem* e1, OPERATOR op, ExprSem* e2){
+    if(e1 && e2){
+        SEMTYPE t1 = e1->pType->type;
+        SEMTYPE t2 = e2->pType->type;
+        if(INTEGER_t == t1 && (FLOAT_t == t2 || DOUBLE_t == t2)){
+            fprintf(fout, "i2f\n");
+            e1->pType->type = t2;
+        } else if(INTEGER_t == t2 && (FLOAT_t == t1 || DOUBLE_t == t1)){
+            fprintf(fout, "i2f\n");
+        }
+
+        if(INTEGER_t == t1){
+            switch(op){
+                case ADD_t:
+                    fprintf(fout, "iadd\n");
+                    break;
+                case SUB_t:
+                    fprintf(fout, "isub\n");
+                    break;
+                case MUL_t:
+                    fprintf(fout, "imul\n");
+                    break;
+                case DIV_t:
+                    fprintf(fout, "idiv\n");
+                    break;
+                case MOD_t:
+                    fprintf(fout, "irem\n");
+                    break;
+            }
+        } else{
+            switch(op){
+                case ADD_t:
+                    fprintf(fout, "fadd\n");
+                    break;
+                case SUB_t:
+                    fprintf(fout, "fsub\n");
+                    break;
+                case MUL_t:
+                    fprintf(fout, "fmul\n");
+                    break;
+                case DIV_t:
+                    fprintf(fout, "fdiv\n");
+                    break;
+                case MOD_t:
+                    fprintf(fout, "irem\n");
+                    break;
+            }
+            
+        }
+        
+    }
+    
+}
+
+void Relation(ExprSem* e1, OPERATOR op, ExprSem* e2){
+    SEMTYPE t1 = e1->pType->type;
+    SEMTYPE t2 = e2->pType->type;
+
+    if(INTEGER_t == t1){
+        fprintf(fout, "isub\n");
+    } else if(FLOAT_t == t1 || DOUBLE_t == t1){
+        fprintf(fout, "fcmpl\n");
+    }
+    
+    switch(op){
+        case LT_t:
+            fprintf(fout, "iflt Ltrue_%d\n", label);
+            break;
+        case LE_t:
+            fprintf(fout, "ifle Ltrue_%d\n", label);
+            break;
+        case GT_t:
+            fprintf(fout, "ifgt Ltrue_%d\n", label);
+            break;
+        case GE_t:
+            fprintf(fout, "ifge Ltrue_%d\n", label);
+            break;
+        case EQ_t:
+            fprintf(fout, "ifeq Ltrue_%d\n", label);
+            break;
+        case NE_t:
+            fprintf(fout, "ifne Ltrue_%d\n", label);
+            break;
+
+    }
+
+    fprintf(fout, "iconst_0\n");
+    fprintf(fout, "goto Lfalse_%d\n", label);
+    fprintf(fout, "Ltrue_%d:\n", label);
+    fprintf(fout, "iconst_1\n");
+    fprintf(fout, "Lfalse_%d:\n", label);
+    label++;
+
+}
+
+void Boolean(OPERATOR op){
+    switch(op){
+        case AND_t:
+            fprintf(fout, "iand\n");
+            break;
+        case OR_t:
+            fprintf(fout, "ior\n");
+            break;
+        case NOT_t:
+            fprintf(fout, "iconst\nnixor\n");
+            break;
+    }
+}
+
+void Negative(ExprSem* exp){
+    if(INTEGER_t == exp->pType->type){
+        fprintf(fout, "ineg\n");
+    } else if(FLOAT_t == exp->pType->type || DOUBLE_t == exp->pType->type){
+        fprintf(fout, "fneg\n");
     }
 }
 

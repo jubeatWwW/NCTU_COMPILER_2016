@@ -72,7 +72,7 @@ program :		prog_st
 				decl_and_def_list 
 				{
 					if(Opt_Symbol == 1)
-					printSymTable( symbolTable, scope );
+					    printSymTable( symbolTable, scope );
 				}
 		;
 
@@ -128,9 +128,11 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 						insertParamIntoSymTable( symbolTable, $4, scope+1 );				
 						insertFuncIntoSymTable( symbolTable, $2, $4, $1, scope, __TRUE );
 					}
+                    FuncSt($2, $4, $1);
+                    
 				}
 			} 	
-			compound_statement { funcReturn = 0; }
+			compound_statement { funcReturn = 0; FuncEnd($1);}
 		  | VOID ID L_PAREN R_PAREN 
 			{
 				funcReturn = createPType(VOID_t); 
@@ -573,6 +575,7 @@ dimension : ML_BRACE arithmetic_expression MR_BRACE
 		  
 logical_expression : logical_expression OR_OP logical_term
 					{
+                        Boolean(OR_t);
 						verifyAndOrOp( $1, OR_t, $3 );
 						$$ = $1;
 					}
@@ -581,6 +584,7 @@ logical_expression : logical_expression OR_OP logical_term
 
 logical_term : logical_term AND_OP logical_factor
 				{
+                    Boolean(AND_t);
 					verifyAndOrOp( $1, AND_t, $3 );
 					$$ = $1;
 				}
@@ -589,6 +593,7 @@ logical_term : logical_term AND_OP logical_factor
 
 logical_factor : NOT_OP logical_factor
 				{
+                    Boolean(NOT_t);
 					verifyUnaryNOT( $2 );
 					$$ = $2;
 				}
@@ -597,6 +602,7 @@ logical_factor : NOT_OP logical_factor
 
 relation_expression : arithmetic_expression relation_operator arithmetic_expression
 					{
+                        Relation($1, $2, $3);
 						verifyRelOp( $1, $2, $3 );
 						$$ = $1;
 					}
@@ -613,6 +619,7 @@ relation_operator : LT_OP { $$ = LT_t; }
 
 arithmetic_expression : arithmetic_expression add_op term
 			{
+                Oper($1, $2, $3);
 				verifyArithmeticOp( $1, $2, $3 );
 				$$ = $1;
 			}
@@ -626,6 +633,7 @@ add_op	: ADD_OP { $$ = ADD_t; }
 		   
 term : term mul_op factor
 		{
+            Oper($1, $2, $3);
 			if( $2 == MOD_t ) {
 				verifyModOp( $1, $3 );
 			}
@@ -645,14 +653,16 @@ mul_op 	: MUL_OP { $$ = MUL_t; }
 factor : variable_reference
 		{
 			verifyExistence( symbolTable, $1, scope, __FALSE );
+            IdExpr($1);
 			$$ = $1;
 			$$->beginningOp = NONE_t;
-            IdExpr($1);
 		}
 	   | SUB_OP variable_reference
 		{
 			if( verifyExistence( symbolTable, $2, scope, __FALSE ) == __TRUE )
 			verifyUnaryMinus( $2 );
+            IdExpr($2);
+            Negative($2);
 			$$ = $2;
 			$$->beginningOp = SUB_t;
 		}		
@@ -664,6 +674,7 @@ factor : variable_reference
 	   | SUB_OP L_PAREN logical_expression R_PAREN
 		{
 			verifyUnaryMinus( $3 );
+            Negative($3);
 			$$ = $3;
 			$$->beginningOp = SUB_t;
 		}

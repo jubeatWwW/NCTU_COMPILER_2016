@@ -12,6 +12,7 @@ typedef struct InstrStack InstrStack;
 typedef struct expr_sem ExprSem;
 typedef struct ConstAttr ConstAttr;
 typedef struct PTypeList PTypeList;
+typedef struct idNode_sem NodeSem;
 
 extern int linenum;
 extern FILE* fout;
@@ -38,7 +39,12 @@ void ProgSt(const char* name);
 void GlobalVar(const char* name, PType* ptype);
 void ReadVar(ExprSem *expr);
 void FuncSt(const char* name, Param* param, PType* ret);
+void FuncEnd(PType* ret);
 
 void FunctionCall(const char* name);
 void ConstExpr(ConstAttr* constattr);
 void IdExpr(ExprSem* expr);
+void Oper(ExprSem* e1, OPERATOR op, ExprSem* e2);
+void Relation(ExprSem* e1, OPERATOR op, ExprSem* e2);
+void Boolean(OPERATOR op);
+void Negative(ExprSem* exp);
