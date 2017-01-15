@@ -24,6 +24,7 @@ int inloop = 0;
 
 int varNo = 1;
 int hasRead = 0;
+int isMain = 0;
 
 %}
 
@@ -106,6 +107,7 @@ funct_def : scalar_type ID L_PAREN R_PAREN
                 
                 if(0 == strcmp($2, "main")){
                     MainFunc();
+                    isMain = 1;
                 } else {
                     FuncSt($2, 0, $1);
                 }
@@ -116,6 +118,7 @@ funct_def : scalar_type ID L_PAREN R_PAREN
                 } else {
                     FuncEnd($1);
                 }
+                isMain = 0;
             }	
 		  | scalar_type ID L_PAREN parameter_list R_PAREN  
 			{				
@@ -144,6 +147,7 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 
                     if(0 == strcmp($2, "main")){
                         MainFunc();
+                        isMain = 1;
                     } else {
                         FuncSt($2, $4, $1);
                     }
@@ -157,6 +161,8 @@ funct_def : scalar_type ID L_PAREN R_PAREN
                 } else {
                     FuncEnd($1);
                 }
+                isMain = 0;
+                varNo = 1;
             }
 		  | VOID ID L_PAREN R_PAREN 
 			{
@@ -174,11 +180,12 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 
                 if(0 == strcmp($2, "main")){
                     MainFunc();
+                    isMain = 1;
                 } else {
                     FuncSt($2, 0, funcReturn);
                 }
 			}
-			compound_statement { funcReturn = 0; FuncEnd(funcReturn);}	
+			compound_statement { funcReturn = 0; FuncEnd(funcReturn); isMain = 0;}	
 		  | VOID ID L_PAREN parameter_list R_PAREN
 			{									
 				funcReturn = createPType(VOID_t);
@@ -207,6 +214,7 @@ funct_def : scalar_type ID L_PAREN R_PAREN
                 
                 if(0 == strcmp($2, "main")){
                     MainFunc();
+                    isMain = 1;
                 } else {
                     FuncSt($2, $4, funcReturn);
                 }
@@ -214,6 +222,8 @@ funct_def : scalar_type ID L_PAREN R_PAREN
 			compound_statement { 
                 funcReturn = 0; 
                 FuncEnd(funcReturn);
+                varNo = 1;
+                isMain = 0;
             }		  
 		  ;
 
@@ -501,10 +511,23 @@ simple_statement : variable_reference ASSIGN_OP logical_expression SEMICOLON
 				 ;
 
 conditional_statement : IF L_PAREN conditional_if  R_PAREN compound_statement
+                      {
+                        ConditionEnd();
+                      }
 					  | IF L_PAREN conditional_if  R_PAREN compound_statement
+                        {
+                            ConditionElse();
+                        } 
 						ELSE compound_statement
+                        {
+                            ConditionElseEnd();
+                        }
 					  ;
-conditional_if : logical_expression { verifyBooleanExpr( $1, "if" ); };;					  
+conditional_if : logical_expression 
+               {
+                    verifyBooleanExpr( $1, "if" );
+                    ConditionSt(); 
+               };;					  
 
 				
 while_statement : WHILE L_PAREN logical_expression { verifyBooleanExpr( $3, "while" ); } R_PAREN { inloop++; }
@@ -604,7 +627,7 @@ jump_statement : CONTINUE SEMICOLON
 				}
 			   | RETURN logical_expression SEMICOLON
 				{
-                    //FuncReturn($2);   
+                    FuncReturn($2, isMain);   
 					verifyReturnStatement( $2, funcReturn );
 				}
 			   ;

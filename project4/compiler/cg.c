@@ -1,6 +1,8 @@
 #include "cg.h"
 
 int label = 0;
+int labelStack[256];
+int stTop = 0;
 
 void ProgSt(const char* name){
     fprintf(fout, "; %s\n", name);
@@ -203,6 +205,25 @@ void AssignToVar(ExprSem* var, ExprSem* booleanExp){
     }
 }
 
+void ConditionSt(){
+    label++;
+    stTop++;
+    labelStack[stTop] = label;
+    fprintf(fout, "ifeq LFalse_%d\n", label);
+}
+
+void ConditionEnd(){
+    fprintf(fout, "LFalse_%d:\n", labelStack[stTop--]);
+}
+
+void ConditionElse(){
+    fprintf(fout, "goto LTrue_%d\n", labelStack[stTop]);
+    fprintf(fout, "LFalse_%d:\n", labelStack[stTop]);
+}
+
+void ConditionElseEnd(){
+    fprintf(fout, "LTrue_%d:\n", labelStack[stTop--]);
+}
 
 void FuncSt(const char* name, Param* param, PType* ret){
     char funcdecl[128];
@@ -314,9 +335,11 @@ void FunctionCall(const char* name){
     }   
 }
 
-void FuncReturn(ExprSem* ret){
+void FuncReturn(ExprSem* ret, int isMain){
     SEMTYPE t = ret->pType->type;
-    if(INTEGER_t == t || BOOLEAN_t == t){
+    if(1 == isMain){
+        fprintf(fout, "return\n");
+    } else if(INTEGER_t == t || BOOLEAN_t == t){
         fprintf(fout, "ireturn\n");
     } else if(FLOAT_t == t || DOUBLE_t == t){
         fprintf(fout, "freturn\n");
