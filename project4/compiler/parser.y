@@ -185,7 +185,7 @@ funct_def : scalar_type ID L_PAREN R_PAREN
                     FuncSt($2, 0, funcReturn);
                 }
 			}
-			compound_statement { funcReturn = 0; FuncEnd(funcReturn); isMain = 0;}	
+			compound_statement { funcReturn = createPType(VOID_t); FuncEnd(funcReturn); isMain = 0;}	
 		  | VOID ID L_PAREN parameter_list R_PAREN
 			{									
 				funcReturn = createPType(VOID_t);
@@ -220,7 +220,7 @@ funct_def : scalar_type ID L_PAREN R_PAREN
                 }
 			} 
 			compound_statement { 
-                funcReturn = 0; 
+                funcReturn = createPType(VOID_t); 
                 FuncEnd(funcReturn);
                 varNo = 1;
                 isMain = 0;
@@ -625,10 +625,12 @@ statement_for 	: variable_reference ASSIGN_OP logical_expression
 function_invoke_statement : ID L_PAREN logical_expression_list R_PAREN SEMICOLON
 							{
 								verifyFuncInvoke( $1, $3, symbolTable, scope );
+                                FunctionCall($1, 0);
 							}
 						  | ID L_PAREN R_PAREN SEMICOLON
 							{
 								verifyFuncInvoke( $1, 0, symbolTable, scope );
+                                FunctionCall($1, 0);
 							}
 						  ;
 

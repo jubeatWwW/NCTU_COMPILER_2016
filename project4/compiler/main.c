@@ -15,7 +15,6 @@ extern char fileName[256];
 extern __BOOLEAN semError; 
 
 FILE *fout;
-InstrStack instrStack;
 
 int  main( int argc, char **argv )
 {

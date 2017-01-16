@@ -226,7 +226,6 @@ void ConditionElse(){
 
 void ConditionElseEnd(){
     fprintf(fout, "LTrue_%d:\n", labelStack[stTop--]);
-    stTop--;
 }
 
 //i = 0;
@@ -385,6 +384,8 @@ void FunctionCall(const char* name, int isNeg){
             case BOOLEAN_t:
                 strcat(funcins, ")Z");
                 break;
+            default:
+                strcat(funcins, ")V");
         }
         
         fprintf(fout, "%s\n", funcins);
@@ -419,7 +420,7 @@ void ConstExpr(ConstAttr* constattr){
             fprintf(fout, "ldc \"%s\"\n", constattr->value.stringVal);
             break;
         case INTEGER_t:
-            fprintf(fout, "sipush %d\n", constattr->value.integerVal);
+            fprintf(fout, "ldc %d\n", constattr->value.integerVal);
             break;
         case FLOAT_t:
             fprintf(fout, "ldc %lf\n", constattr->value.floatVal);
@@ -445,7 +446,7 @@ void IdExpr(ExprSem* expr){
         if(CONSTANT_t == t){
             switch(expr->pType->type){
                 case INTEGER_t:
-                    fprintf(fout, "sipush %d\n", node->attribute->constVal->value.integerVal);
+                    fprintf(fout, "ldc %d\n", node->attribute->constVal->value.integerVal);
                     break;
                 case FLOAT_t:
                     fprintf(fout, "ldc %lf\n", node->attribute->constVal->value.floatVal);
@@ -466,7 +467,7 @@ void IdExpr(ExprSem* expr){
                     fprintf(fout, "fload %d\n", node->attribute->varNo);
                     break;
                 case DOUBLE_t:
-                    fprintf(fout, "iload %d\n", node->attribute->varNo);
+                    fprintf(fout, "fload %d\n", node->attribute->varNo);
                     break;
                 case BOOLEAN_t:
                     fprintf(fout, "iload %d\n", node->attribute->varNo);
