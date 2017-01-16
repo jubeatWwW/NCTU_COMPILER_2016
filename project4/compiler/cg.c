@@ -135,7 +135,7 @@ void PrintVar(ExprSem* expr){
             fprintf(fout, "invokevirtual java/io/PrintStream/print(F)V\n");
             break;
         case DOUBLE_t:
-            fprintf(fout, "invokevirtual java/io/PrintStream/print(D)V\n");
+            fprintf(fout, "invokevirtual java/io/PrintStream/print(F)V\n");
             break;
         case BOOLEAN_t:
             fprintf(fout, "invokevirtual java/io/PrintStream/print(Z)V\n");
@@ -174,9 +174,9 @@ void AssignToVar(ExprSem* var, ExprSem* booleanExp){
                     break;
                 case DOUBLE_t:
                     if(INTEGER_t == booleanExp->pType->type)
-                        fprintf(fout, "i2f\nputstatic %s/%s D\n", fileName, node->name);
+                        fprintf(fout, "i2f\nputstatic %s/%s F\n", fileName, node->name);
                     else
-                        fprintf(fout, "putstatic %s/%s D\n", fileName, node->name);
+                        fprintf(fout, "putstatic %s/%s F\n", fileName, node->name);
                     break;
                 case BOOLEAN_t:
                     fprintf(fout, "putstatic %s/%s Z\n", fileName, node->name);

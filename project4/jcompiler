@@ -58,7 +58,7 @@ if [ "${run}" = 1 ];then
     echo ""
     
     if [ "${hasinput}" = 1 ]; then
-        java output < ${input}
+        java output < ../${input}
     else
         java output
     fi
