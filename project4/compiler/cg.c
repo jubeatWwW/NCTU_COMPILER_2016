@@ -261,6 +261,23 @@ void ForExit(){
     stTop--;
 }
 
+void WhileBegin(){
+    label++;
+    stTop++;
+    labelStack[stTop] = label;
+    fprintf(fout, "LWhile_%d:\n", labelStack[stTop]);
+}
+
+void WhileExit(){
+    fprintf(fout, "ifeq LWhileExit_%d\n", labelStack[stTop]);
+}
+
+void WhileEnd(){
+    fprintf(fout, "goto LWhile_%d\n", labelStack[stTop]);
+    fprintf(fout, "LWhileExit_%d:\n", labelStack[stTop]);
+
+}
+
 void FuncSt(const char* name, Param* param, PType* ret){
     char funcdecl[128];
     snprintf(funcdecl, sizeof(funcdecl), ".method public static %s(", name);

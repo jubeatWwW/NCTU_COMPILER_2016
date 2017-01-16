@@ -530,13 +530,16 @@ conditional_if : logical_expression
                };;					  
 
 				
-while_statement : WHILE L_PAREN logical_expression { verifyBooleanExpr( $3, "while" ); } R_PAREN { inloop++; }
-					compound_statement { inloop--; }
-				| { inloop++; } DO compound_statement WHILE L_PAREN logical_expression R_PAREN SEMICOLON  
+while_statement : WHILE L_PAREN {WhileBegin();} 
+                    logical_expression { verifyBooleanExpr( $4, "while" ); WhileExit();} R_PAREN { inloop++; }
+					compound_statement { inloop--; WhileEnd();}
+				| { inloop++; } DO {WhileBegin();} compound_statement WHILE L_PAREN logical_expression
+                  {WhileExit();}    
+                 R_PAREN SEMICOLON  
 					{ 
-						 verifyBooleanExpr( $6, "while" );
+						 verifyBooleanExpr( $7, "while" );
 						 inloop--; 
-						
+						 WhileEnd();
 					}
 				;
 
