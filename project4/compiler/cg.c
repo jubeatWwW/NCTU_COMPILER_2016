@@ -1,8 +1,13 @@
+#include "semcheck.h"
+#include "symtab.h"
 #include "cg.h"
 
 int label = 0;
 int labelStack[256];
 int stTop = 0;
+
+varDeclParam* list[256];
+int listTop;
 
 void ProgSt(const char* name){
     fprintf(fout, "; %s\n", name);
@@ -17,26 +22,6 @@ void MainFunc(){
     fprintf(fout, ".limit locals 100\n");
 }
 
-void InstrStackPush(const char* ins){
-    instrStack.stack[instrStack.current++] = strdup(ins);
-}
-
-void InstrStackPrint(){
-    int i;
-    for(i=0; i< instrStack.current; i++){
-        fprintf(fout, "%s\n", instrStack.stack[i]);
-        free(instrStack.stack[i]);
-    }
-    instrStack.current = 0;
-}
-
-void InstrStackClear(){
-    int i;
-    for(i=0; i< instrStack.current; i++){
-        free(instrStack.stack[i]);
-    }
-    instrStack.current = 0;
-}
 
 void GlobalVar(const char* name, PType* ptype){
     switch(ptype->type){
@@ -55,6 +40,23 @@ void GlobalVar(const char* name, PType* ptype){
         default:
             printf("Unknown type\n");
             break;
+    }
+}
+
+void DeclInit(){
+    listTop = 0;
+}
+
+void DeclPush(varDeclParam* var){
+    list[listTop++] = var;
+}
+
+void DeclPop(PType* type){
+    listTop--;
+    for(; listTop >= 0; listTop--){
+        ExprSem* e = createExprSem(list[listTop]->para->idlist->value);
+        e->pType = type;
+        AssignToVar(e, list[listTop]->expr);
     }
 }
 
@@ -116,8 +118,6 @@ void ReadVar(ExprSem* expr){
             }
         }
         
-        InstrStackClear();
-        InstrStackPrint();
     }
 
 }
@@ -147,6 +147,9 @@ void PrintVar(ExprSem* expr){
 }
 
 void AssignToVar(ExprSem* var, ExprSem* booleanExp){
+    if(0 == booleanExp)
+        return;
+
     if(0 == var->varRef)
         return;
     char* name = var->varRef->id;
@@ -156,7 +159,7 @@ void AssignToVar(ExprSem* var, ExprSem* booleanExp){
 
     if(0 == node)
         return;
-    
+
     if(VARIABLE_t == node->category){
         if(0 == node->scope){
             switch(t){
@@ -223,6 +226,7 @@ void ConditionElse(){
 
 void ConditionElseEnd(){
     fprintf(fout, "LTrue_%d:\n", labelStack[stTop--]);
+    stTop--;
 }
 
 //i = 0;
@@ -275,7 +279,7 @@ void WhileExit(){
 void WhileEnd(){
     fprintf(fout, "goto LWhile_%d\n", labelStack[stTop]);
     fprintf(fout, "LWhileExit_%d:\n", labelStack[stTop]);
-
+    stTop--;
 }
 
 void FuncSt(const char* name, Param* param, PType* ret){
@@ -342,7 +346,7 @@ void FuncEnd(PType* ret){
 }
 
 
-void FunctionCall(const char* name){
+void FunctionCall(const char* name, int isNeg){
     SymNode* node = lookupSymbol(symbolTable, name, 0, __FALSE);
     if(node){
         char funcins[128];
@@ -385,6 +389,13 @@ void FunctionCall(const char* name){
         
         fprintf(fout, "%s\n", funcins);
         
+        if(isNeg){
+            if(INTEGER_t == node->type->type){
+                fprintf(fout, "ineg\n");
+            } else if(FLOAT_t == node->type->type || DOUBLE_t == node->type->type){
+                fprintf(fout, "fneg\n");
+            }
+        }
     }   
 }
 
@@ -538,6 +549,10 @@ void Oper(ExprSem* e1, OPERATOR op, ExprSem* e2){
 void Relation(ExprSem* e1, OPERATOR op, ExprSem* e2){
     SEMTYPE t1 = e1->pType->type;
     SEMTYPE t2 = e2->pType->type;
+    
+    label++;
+    stTop++;
+    labelStack[stTop] = label;
 
     if(INTEGER_t == t1){
         fprintf(fout, "isub\n");
@@ -547,33 +562,33 @@ void Relation(ExprSem* e1, OPERATOR op, ExprSem* e2){
     
     switch(op){
         case LT_t:
-            fprintf(fout, "iflt Ltrue_%d\n", label);
+            fprintf(fout, "iflt Ltrue_%d\n", labelStack[stTop]);
             break;
         case LE_t:
-            fprintf(fout, "ifle Ltrue_%d\n", label);
+            fprintf(fout, "ifle Ltrue_%d\n", labelStack[stTop]);
             break;
         case GT_t:
-            fprintf(fout, "ifgt Ltrue_%d\n", label);
+            fprintf(fout, "ifgt Ltrue_%d\n", labelStack[stTop]);
             break;
         case GE_t:
-            fprintf(fout, "ifge Ltrue_%d\n", label);
+            fprintf(fout, "ifge Ltrue_%d\n", labelStack[stTop]);
             break;
         case EQ_t:
-            fprintf(fout, "ifeq Ltrue_%d\n", label);
+            fprintf(fout, "ifeq Ltrue_%d\n", labelStack[stTop]);
             break;
         case NE_t:
-            fprintf(fout, "ifne Ltrue_%d\n", label);
+            fprintf(fout, "ifne Ltrue_%d\n", labelStack[stTop]);
             break;
 
     }
 
     fprintf(fout, "iconst_0\n");
-    fprintf(fout, "goto Lfalse_%d\n", label);
-    fprintf(fout, "Ltrue_%d:\n", label);
+    fprintf(fout, "goto Lfalse_%d\n", labelStack[stTop]);
+    fprintf(fout, "Ltrue_%d:\n", labelStack[stTop]);
     fprintf(fout, "iconst_1\n");
-    fprintf(fout, "Lfalse_%d:\n", label);
-    label++;
-
+    fprintf(fout, "Lfalse_%d:\n", labelStack[stTop]);
+    
+    stTop--;
 }
 
 void Boolean(OPERATOR op){

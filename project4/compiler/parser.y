@@ -284,6 +284,7 @@ var_decl : scalar_type identifier_list SEMICOLON
 			{
 				struct varDeclParam *ptr;
 				struct SymNode *newNode;
+                DeclInit();
 				for( ptr=$2 ; ptr!=0 ; ptr=(ptr->next) ) {						
 					if( verifyRedeclaration( symbolTable, ptr->para->idlist->value, scope ) == __FALSE ) { }
 					else {
@@ -291,12 +292,17 @@ var_decl : scalar_type identifier_list SEMICOLON
                             if(0 == scope){
                                 GlobalVar(ptr->para->idlist->value, ptr->para->pType);
 	    						newNode = createVarNode( ptr->para->idlist->value, scope, ptr->para->pType, 0 );
-                            } else
+                            } else{
 							    newNode = createVarNode( ptr->para->idlist->value, scope, ptr->para->pType, varNo++ );
-							insertTab( symbolTable, newNode );											
+                            }
+							insertTab( symbolTable, newNode );
+                            DeclPush(ptr);                    
 						}
 					}
 				}
+                
+                DeclPop($1);
+            
 			}
 			;
 
@@ -771,23 +777,25 @@ factor : variable_reference
 		{
 			$$ = verifyFuncInvoke( $1, $3, symbolTable, scope );
 			$$->beginningOp = NONE_t;
-            FunctionCall($1);
+            FunctionCall($1, 0);
 		}
 	   | SUB_OP ID L_PAREN logical_expression_list R_PAREN
 	    {
 			$$ = verifyFuncInvoke( $2, $4, symbolTable, scope );
 			$$->beginningOp = SUB_t;
-            FunctionCall($2);
+            FunctionCall($2, 1);
 		}
 	   | ID L_PAREN R_PAREN
 		{
 			$$ = verifyFuncInvoke( $1, 0, symbolTable, scope );
 			$$->beginningOp = NONE_t;
+            FunctionCall($1, 0);
 		}
 	   | SUB_OP ID L_PAREN R_PAREN
 		{
 			$$ = verifyFuncInvoke( $2, 0, symbolTable, scope );
 			$$->beginningOp = SUB_OP;
+            FunctionCall($2, 1);
 		}
 	   | literal_const
 	    {
