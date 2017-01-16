@@ -30,14 +30,28 @@ int  main( int argc, char **argv )
 				exit(-1);
 		}
  
-        strcpy(fileName, argv[1]);
+        /*strcpy(fileName, argv[1]);
         int len = strlen(fileName);
         char *ext = fileName + len;
         while(*ext-- != '.');
         *(ext+1) = '\0';
 
-        char newfilename[256];
-        snprintf(newfilename, sizeof(newfilename), "%s.j", fileName);
+        while('/' != *ext && ext >= fileName){
+            ext--;
+        }
+
+        ext++;
+        char* tmp = strdup(ext);
+        strcpy(fileName, tmp);
+        
+
+        char newfilename[256];*/
+
+        strcpy(fileName, "output");
+        char* newfilename = strdup("output.j");
+        
+
+        //snprintf(newfilename, sizeof(newfilename), "%s.j", fileName);
         fout = fopen(newfilename, "w");
         
 		yyin = fp;

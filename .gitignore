@@ -9,9 +9,7 @@ y.tab.h
 y.output
 *.j
 
-project4/jasmin/*.c
-project4/jasmin/*.j
-project4/jasmin/*.class
-project4/jasmin/input
-project4/jasmin/parser
-
+!project4/jasmin/jasmin.jar
+project4/jasmin/*
+project4/compiler/*.o
+project4/compiler/compiler

@@ -1,5 +1,5 @@
-TARGET = parser
-OBJECT = lex.yy.c y.tab.c y.tab.o lex.yy.o y.output parser y.tab.h main.o semcheck.o symtab.o cg.o
+TARGET = compiler
+OBJECT = lex.yy.c y.tab.c y.tab.o lex.yy.o y.output compiler y.tab.h main.o semcheck.o symtab.o cg.o
 CC = gcc -g
 LEX = flex
 YACC = yacc -v
@@ -8,7 +8,7 @@ LIBS = -lfl
 
 all: $(TARGET)
 
-parser: y.tab.o lex.yy.o main.o semcheck.o symtab.o cg.o
+compiler: y.tab.o lex.yy.o main.o semcheck.o symtab.o cg.o
 	$(CC) -o $(TARGET) y.tab.o lex.yy.o main.o semcheck.o symtab.o cg.o $(LIBS)
 
 y.tab.o: y.tab.c
@@ -27,5 +27,5 @@ main.o: main.c
 	$(CC) -c main.c
 
 clean:
-	rm -f $(TARGET) $(OBJECT)
+	rm -f $(TARGET) $(OBJECT) output.j
 
