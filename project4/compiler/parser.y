@@ -542,8 +542,16 @@ while_statement : WHILE L_PAREN logical_expression { verifyBooleanExpr( $3, "whi
 
 
 				
-for_statement : FOR L_PAREN initial_expression SEMICOLON control_expression SEMICOLON increment_expression R_PAREN  { inloop++; }
-					compound_statement  { inloop--; }
+for_statement : FOR L_PAREN initial_expression SEMICOLON
+              {
+                ForBegin();
+              } 
+                control_expression 
+              {
+                ForLogical();
+              }
+                SEMICOLON increment_expression R_PAREN  { inloop++; ForFirst(); }
+					compound_statement  { inloop--; ForExit();}
 			  ;
 
 initial_expression : initial_expression COMMA statement_for		
@@ -599,6 +607,8 @@ statement_for 	: variable_reference ASSIGN_OP logical_expression
 						// if both LHS and RHS are exists, verify their type
 						if( flagLHS==__TRUE && flagRHS==__TRUE )
 							verifyAssignmentTypeMatch( $1, $3 );
+
+                        AssignToVar($1, $3);
 					}
 					;
 					 

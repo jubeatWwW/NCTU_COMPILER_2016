@@ -49,6 +49,10 @@ void ConditionEnd();
 void ConditionElse();
 void ConditionElseEnd();
 
+void ForBegin();
+void ForLogical();
+void ForExit();
+
 void FuncSt(const char* name, Param* param, PType* ret);
 void FuncEnd(PType* ret);
 void FuncReturn(ExprSem* ret, int isMain);

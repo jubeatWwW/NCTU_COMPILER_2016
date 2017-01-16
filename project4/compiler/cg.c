@@ -225,6 +225,42 @@ void ConditionElseEnd(){
     fprintf(fout, "LTrue_%d:\n", labelStack[stTop--]);
 }
 
+//i = 0;
+void ForBegin(){
+    label++;
+    stTop++;
+    labelStack[stTop] = label;
+    fprintf(fout, "iconst_0\n"); //First loop flag
+    fprintf(fout, "LRe_%d:\n", labelStack[stTop]);
+}
+
+//i<10;
+void ForLogical(){
+    fprintf(fout, "ifeq LFalse_%d\n", labelStack[stTop]);  //logical expression result check
+
+    fprintf(fout, "ifeq LFirst_%d\n", labelStack[stTop]);  //jump the first loop calc
+    fprintf(fout, "goto LBody_%d\n", labelStack[stTop]);
+
+    fprintf(fout, "LBegin_%d:\n", labelStack[stTop]);
+
+    
+}
+
+//i = i+1
+void ForFirst(){
+    fprintf(fout, "goto LRe_%d\n", labelStack[stTop]);
+    fprintf(fout, "LFirst_%d:\n", labelStack[stTop]);
+    fprintf(fout, "LBody_%d:\n", labelStack[stTop]);
+}
+
+//{   ...
+void ForExit(){
+    fprintf(fout, "iconst_1\n");
+    fprintf(fout, "goto LBegin_%d\n", labelStack[stTop]);
+    fprintf(fout, "LFalse_%d:\n", labelStack[stTop]);
+    stTop--;
+}
+
 void FuncSt(const char* name, Param* param, PType* ret){
     char funcdecl[128];
     snprintf(funcdecl, sizeof(funcdecl), ".method public static %s(", name);
