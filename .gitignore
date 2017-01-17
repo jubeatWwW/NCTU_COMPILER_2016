@@ -7,3 +7,9 @@ y.tab.o
 y.tab.c
 y.tab.h
 y.output
+*.j
+
+!project4/jasmin/jasmin.jar
+project4/jasmin/*
+project4/compiler/*.o
+project4/compiler/compiler
